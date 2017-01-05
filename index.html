@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Appcelerator compiler</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+  </head>
+  <body>
+    <h1>Appcelerator compiler</h1>
+    <label> Workspace : </label>
+    <input id="worspacePathField" type="text" readonly />
+    <div>
+        <h3>Liste des projets</h3>
+        <div id="projectsListDiv"></div>
+    </div>
+    <div>
+        <input id="runBtn" type="button" value="Run" />
+    </div>
+    <div>
+        <h3>Simulateurs</h3>
+        <div id="simulatorsListDiv"></div>
+    </div>
+  </body>
+
+  <script>
+    // You can also require other files to run in this process
+    require('./renderer.js')
+  </script>
+</html>
