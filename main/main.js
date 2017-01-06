@@ -17,7 +17,7 @@ const ipc = require('electron').ipcMain;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
-
+console.log( app.getPath( 'userData'))
 function createWindow () {
 
   // Create the browser window.
@@ -25,22 +25,10 @@ function createWindow () {
 
   // and load the index.html of the app.
     mainWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'index.html'),
+        pathname: path.join(__dirname, './../renderer/html/index.html'),
         protocol: 'file:',
         slashes: true
     }));
-
-    ipc.on('select-workspace-open', function( event, defaultPath) {
-        defaultPath || ( defaultPath = os.homedir());
-        dialog.showOpenDialog({
-            browserWindow : mainWindow,
-            title         : 'Sélectionner le workspace Appcelerator',
-            defaultPath   : defaultPath,
-            properties    : ['openDirectory']
-        }, function( files) {
-            if ( files && files.length ) event.sender.send('workspace-selected', files[0]);
-        });
-    });
 
     
   // Open the DevTools.
