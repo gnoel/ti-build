@@ -65,7 +65,8 @@ function refreshSimulatorsAndDevices(){
         _.each( _tiInfos.ios.simulators.ios, function( simList, simVersion){
             if ( simVersion < _minIosVersion ) return;
             _.each( simList, function( sim) {
-                if ( !_targetList[ sim.family] ) return;
+                var family = (sim.family || '').toLowerCase();
+                if ( !_targetList[ family] ) return;
                 simulators[ sim.udid] = {
                     simulator  : true,
                     type       : sim.type,
@@ -74,7 +75,7 @@ function refreshSimulatorsAndDevices(){
                     name       : sim.name,
                     udid       : sim.udid,
                     version    : sim.version,
-                    family     : sim.family
+                    family     : family
                 };
             });
         });
@@ -82,15 +83,42 @@ function refreshSimulatorsAndDevices(){
         return simulators;
     }
 
-    function onGetTiInfos( tiInfos) {
+    function _getIosDevices( _tiInfos, _minIosVersion, _targetList){
+        _minIosVersion || ( _minIosVersion = config.get( '_default_min_ios_version'));
+        _targetList    || ( targetList = {});
+        let devices = {};
+        _.each( _tiInfos.ios.devices, function( device){
+            var deviceClass = (device.deviceClass || '').toLowerCase();
+            if ( !_targetList[ deviceClass] || device.productVersion < _minIosVersion ) return;
+            devices[ device.udid] = {
+                simulator  : false,
+                type       : 'ios',
+                deviceDir  : '',
+                deviceName : device.name,
+                name       : device.name,
+                udid       : device.udid,
+                version    : device.productVersion,
+                family     : deviceClass
+            };
+        });
+        stateData.devices = devices;
+        return devices;
+    }
+
+    function onGetTiInfos( tiInfos) { console.log( tiInfos)
         function onGetTiappJSON( json) {
             tools.assert( json, 'refreshSimulatorsAndDevices.onGetTiappJSON : No Tiapp Data');
             let iosMinVersion = _getIosMinVersion( json);
             let targetList    = _getTargetList( json);
             let iosSimulators = _getIosSimulators( tiInfos, iosMinVersion, targetList);
+            let iosDevices    = _getIosDevices( tiInfos, iosMinVersion, targetList);
             simulatorsListDiv.innerHTML = '';
             _.each( iosSimulators, function( simulator, udid){
                 html.createRadio( simulatorsListDiv, udid, udid, simulator.name, 'deviceRadioGroup', false);
+            });
+
+            _.each( iosDevices, function( device, udid){
+                html.createRadio( simulatorsListDiv, udid, udid, device.name, 'deviceRadioGroup', false); // TODO : Changer la div
             });
         }
         tools.getTiappJSON( html.getSelectedRadio( 'projectRadioGroup'), onGetTiappJSON);
@@ -125,12 +153,19 @@ console.log( '****************** D')
 function run(){
     var selectedProject = html.getSelectedRadio( 'projectRadioGroup');
     var selectedDevice  = html.getSelectedRadio( 'deviceRadioGroup');
-    let device          = stateData.simulators[ selectedDevice];
-    tools.assert( device, "Aucun device ne correspond à celui sélectionné");
+    let simulator       = stateData.simulators[ selectedDevice];
+    let device          = stateData.devices[ selectedDevice];
+    tools.assert( simulator || device, "Aucun simulator / device ne correspond à celui sélectionné");
     let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
+    let params = [];
+    
+    if ( device ) {
+        params = [ 'build', '-p', device.type,    '-C', '-T', 'device',    device.udid,    '-d', projectPath, '--skip-js-minify', 'true', '--sim-focus', 'true'];
+    } else {
+        params = [ 'build', '-p', simulator.type, '-C', '-T', 'simulator', simulator.udid, '-d', projectPath, '--skip-js-minify', 'true', '--sim-focus', 'true' ];
+    }
 
-    let params = [ 'build', '-p', device.type, '-C', device.udid, '-d', projectPath, '--skip-js-minify', 'true', '--sim-focus', 'false' ];
-    let runCmd = spawn('ti', params)//, { cwd : projectPath});
+    let runCmd = spawn('ti', params);
     runCmd.stdout.on('data', function (data) {
       console.log('stdout: ' + data.toString());
     });
