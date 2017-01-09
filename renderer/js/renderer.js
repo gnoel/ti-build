@@ -4,25 +4,32 @@ const html   = require( './../../tools/html').html;
 const ipc    = require('electron').ipcRenderer;
 const fs     = require('fs');
 const path   = require('path');
-const util   = require('util');
 const spawn  = require('child_process').spawn;
 const _      = require('underscore');
 
 const projectsListDiv   = document.getElementById( 'projectsListDiv');
 const simulatorsListDiv = document.getElementById( 'simulatorsListDiv');
+const devicesListDiv    = document.getElementById( 'devicesListDiv');
 const runBtn            = document.getElementById( 'runBtn');
+const consoleDiv        = document.getElementById( 'console');
 runBtn.addEventListener( 'click', function( event) {
     run();
 });
 
 let stateData = {
-    simulators : {}
+    simulators : {},
+    devices : {}
 };
 
 (function(){
     refreshProjectList();
     refreshSimulatorsAndDevices();
+    openConfig();
 }());
+
+function openConfig(){
+    ipc.send('ipc-openConfig')
+}
 
 function refreshProjectList(){
     let workspacePath = config.get( 'workspace');
@@ -36,7 +43,7 @@ function refreshProjectList(){
 
     tools.assert( dirs && dirs.length, 'Workspace vide : ' + workspacePath);
 
-    projectsListDiv.innerHTML = '';
+    html.empty( projectsListDiv);
     _.each( dirs, function( dir, index){
         let id  = '_projectRadio_' + index + '_';
         html.createRadio( projectsListDiv, id, dir, dir, 'projectRadioGroup', index === 0);
@@ -105,28 +112,33 @@ function refreshSimulatorsAndDevices(){
         return devices;
     }
 
-    function onGetTiInfos( tiInfos) { console.log( tiInfos)
+    function _addDevicesRadios( container, list){
+        tools.assert( container, '_addDevicesRadios : Container manquant');
+        if ( !list || !_.size( list) ) html.createText( container, 'Aucun');
+        else {
+            html.empty( container);
+            _.each( list, function( device, udid){
+                html.createRadio( container, udid, udid, device.name, 'deviceRadioGroup', false);
+            });
+        }
+    }
+
+    function onGetTiInfos( tiInfos) {
         function onGetTiappJSON( json) {
             tools.assert( json, 'refreshSimulatorsAndDevices.onGetTiappJSON : No Tiapp Data');
             let iosMinVersion = _getIosMinVersion( json);
             let targetList    = _getTargetList( json);
             let iosSimulators = _getIosSimulators( tiInfos, iosMinVersion, targetList);
             let iosDevices    = _getIosDevices( tiInfos, iosMinVersion, targetList);
-            simulatorsListDiv.innerHTML = '';
-            _.each( iosSimulators, function( simulator, udid){
-                html.createRadio( simulatorsListDiv, udid, udid, simulator.name, 'deviceRadioGroup', false);
-            });
-
-            _.each( iosDevices, function( device, udid){
-                html.createRadio( simulatorsListDiv, udid, udid, device.name, 'deviceRadioGroup', false); // TODO : Changer la div
-            });
+            _addDevicesRadios( simulatorsListDiv, iosSimulators);
+            _addDevicesRadios( devicesListDiv, iosDevices);
         }
         tools.getTiappJSON( html.getSelectedRadio( 'projectRadioGroup'), onGetTiappJSON);
     }
     tools.getTiInfos( onGetTiInfos);
 }
 
-config.set( 'build.skip_js_minify', 'false');
+/*config.set( 'build.skip_js_minify', 'false');
 console.log( config.get( 'build'))
 console.log( config.get( 'build.skip_js_minify'))
 console.log( '****************** A')
@@ -145,36 +157,58 @@ console.log( '****************** C')
 config.set( 'test.propsTest2.subProps2', 'false');
 console.log( config.get( 'test'))
 console.log( config.get( 'test.propsTest2.subProps2'))
-console.log( '****************** D')
+console.log( '****************** D')*/
 
 
-
+//usr/local/bin/node /Users/geoffreynoel/.appcelerator/install/6.1.0/package/node_modules/titanium/lib/titanium.js build run --platform ios --log-level trace --sdk 5.5.1.GA --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition --target device --ios-version 10.1 --device-family ipad --developer-name Geoffrey Noel (384MHH926N) --device-id 77d01dec87f3cf013b769c37d69af16992980d8e --pp-uuid 09c91634-7b77-43db-94aa-0cb896b69d54 --no-colors --no-progress-bars --no-prompt --prompt-type socket-bundle --prompt-port 56571 --config-file /var/folders/3s/xlckpgq12bv_w9nx3893rz4c0000gp/T/build-1483889365300.json --no-banner --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition
 
 function run(){
     var selectedProject = html.getSelectedRadio( 'projectRadioGroup');
     var selectedDevice  = html.getSelectedRadio( 'deviceRadioGroup');
     let simulator       = stateData.simulators[ selectedDevice];
     let device          = stateData.devices[ selectedDevice];
-    tools.assert( simulator || device, "Aucun simulator / device ne correspond à celui sélectionné");
+    tools.assert( simulator || device, "Aucun simulateur / device ne correspond à celui sélectionné");
     let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
     let params = [];
-    
+
     if ( device ) {
-        params = [ 'build', '-p', device.type,    '-C', '-T', 'device',    device.udid,    '-d', projectPath, '--skip-js-minify', 'true', '--sim-focus', 'true'];
+        params = [ 'build', '-p', device.type,    '-C', '-T', 'device',    device.udid,    '-d', projectPath, '-V', 'Geoffrey Noel (384MHH926N)', '-P', '09c91634-7b77-43db-94aa-0cb896b69d54', '--skip-js-minify', 'true'];
     } else {
         params = [ 'build', '-p', simulator.type, '-C', '-T', 'simulator', simulator.udid, '-d', projectPath, '--skip-js-minify', 'true', '--sim-focus', 'true' ];
     }
-
+    html.empty( consoleDiv);
     let runCmd = spawn('ti', params);
     runCmd.stdout.on('data', function (data) {
-      console.log('stdout: ' + data.toString());
+      log( data.toString());
     });
 
     runCmd.stderr.on('data', function (data) {
-      console.log('stderr: ' + data.toString());
+      log( data.toString());
     });
 
     runCmd.on('exit', function (code) {
-      console.log('child process exited with code ' + code.toString());
+      log('child process exited with code ' + code.toString());
   });
+
+  function log( text){
+      function _getColor( _text){
+          var _keyWords = { //TODO : config
+              '[DEBUG]' : 'green',
+              '[TRACE]' : 'blue',
+              '[INFO]'  : 'white',
+              '[ERROR]' : 'red',
+              '[WARN]'  : 'orange',
+              '[INFO]'  : 'white'
+          };
+          _text || ( _text = '');
+          let match = _text.match( /^\[\w+\]/);
+          if( !match ) return 'white';
+          else {
+              return _keyWords[ match[0] || ''] || 'white';
+          }
+      }
+      text || ( text = '');
+      let line  = html.createText( consoleDiv, text, _getColor( text));
+      if ( line ) line.scrollIntoView();
+  }
 }

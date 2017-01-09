@@ -2,9 +2,22 @@ const config = require('./config').config;
 const tools  = require('./tools').tools;
 
 exports.html = {
+    empty : function( container){
+        this._check( 'empty', container);
+        container.innerHTML = '';
+    },
+
+    createText : function( container, text, color){
+        this._check( 'createText', container);
+        let p = document.createElement('p');
+        p.innerText   = text  || '';
+        p.style.color = color || '';
+        container.appendChild( p);
+        return p;
+    },
+
     createRadio : function( container, id, value, label, group, checked){
-        tools.assert( document  && document.createElement, 'html.createRadio : fonction exécutée dans le mauvais environnement');
-        tools.assert( container && container.appendChild,  'html.createRadio : container manquant ou non HTMLElement');
+        this._check( 'createRadio', container);
 
         let div = document.createElement('div');
 
@@ -17,12 +30,13 @@ exports.html = {
 
         let lbl       = document.createElement( 'label');
         lbl.for       = id    || '';
-        lbl.innerHTML = label || '';
+        lbl.innerText = label || '';
 
         div.appendChild( radio);
         div.appendChild( lbl);
 
         container.appendChild( div);
+        return div;
     },
 
     getSelectedRadio : function( group){
@@ -37,5 +51,10 @@ exports.html = {
         }
         tools.assert( selectedRadio, "Aucun élement Radio sélectionné " + group);
         return selectedRadio.value;
+    },
+
+    _check : function( fctName, container){
+        tools.assert( document  && document.createElement, 'html.' + fctName + ' : fonction exécutée dans le mauvais environnement');
+        tools.assert( container && container.appendChild,  'html.' + fctName + ' : container manquant ou non HTMLElement');
     }
 }

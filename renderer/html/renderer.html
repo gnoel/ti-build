@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8">
     <title>Appcelerator compiler</title>
-    <link rel="stylesheet" type="text/css" href="./../css/style.css">
+    <link rel="stylesheet" type="text/css" href="./../css/renderer.css">
   </head>
   <body>
-    <h1>Appcelerator compiler</h1>
     <div>
         <h3>Liste des projets</h3>
         <div id="projectsListDiv"></div>
@@ -17,8 +16,16 @@
     <div>
         <h3>Simulateurs</h3>
         <div id="simulatorsListDiv"></div>
+        <h3>Devices</h3>
+        <div id="devicesListDiv"></div>
+    </div>
+
+    <div id="logger">
+        <div id="console"></div>
     </div>
   </body>
+
+
 
   <script>
     require('./../js/renderer.js')
