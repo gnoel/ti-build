@@ -10,11 +10,16 @@ const _      = require('underscore');
 const projectsListDiv   = document.getElementById( 'projectsListDiv');
 const simulatorsListDiv = document.getElementById( 'simulatorsListDiv');
 const devicesListDiv    = document.getElementById( 'devicesListDiv');
+const configBtn         = document.getElementById( 'configBtn');
 const runBtn            = document.getElementById( 'runBtn');
+const refeshDevicesBtn  = document.getElementById( 'refeshDevicesBtn');
+const refeshProjectsBtn = document.getElementById( 'refeshProjectsBtn');
 const consoleDiv        = document.getElementById( 'console');
-runBtn.addEventListener( 'click', function( event) {
-    run();
-});
+
+configBtn.addEventListener( 'click', openConfig);
+refeshProjectsBtn.addEventListener( 'click', refreshProjectList);
+refeshDevicesBtn.addEventListener( 'click', refreshSimulatorsAndDevices);
+runBtn.addEventListener( 'click', run);
 
 let stateData = {
     simulators : {},
@@ -23,8 +28,6 @@ let stateData = {
 
 (function(){
     refreshProjectList();
-    refreshSimulatorsAndDevices();
-    openConfig();
 }());
 
 function openConfig(){
@@ -46,13 +49,14 @@ function refreshProjectList(){
     html.empty( projectsListDiv);
     _.each( dirs, function( dir, index){
         let id  = '_projectRadio_' + index + '_';
-        html.createRadio( projectsListDiv, id, dir, dir, 'projectRadioGroup', index === 0);
+        html.createRadio( projectsListDiv, id, dir, dir, 'projectRadioGroup', index === 0, refreshSimulatorsAndDevices);
     });
+    refreshSimulatorsAndDevices();
 }
 
 function refreshSimulatorsAndDevices(){
     function _getIosMinVersion( _json){
-        let min = parseFloat( _.min( _json['ios'][0]['min-ios-ver']));
+        let min = parseFloat( _json['ios'][0]['min-ios-ver']);
         return !isNaN( min) ? min : config.get( 'default_min_ios_version');
     }
 
@@ -112,13 +116,17 @@ function refreshSimulatorsAndDevices(){
         return devices;
     }
 
-    function _addDevicesRadios( container, list){
+    function _addDevicesRadios( container, list, autoSelect){
         tools.assert( container, '_addDevicesRadios : Container manquant');
-        if ( !list || !_.size( list) ) html.createText( container, 'Aucun');
-        else {
+        if ( !list || !_.size( list) ) {
+            html.empty( container)
+            html.createText( container, 'Aucun');
+        } else {
             html.empty( container);
+            let first = true;
             _.each( list, function( device, udid){
-                html.createRadio( container, udid, udid, device.name, 'deviceRadioGroup', false);
+                html.createRadio( container, udid, udid, device.name, 'deviceRadioGroup', ( autoSelect && first));
+                first = false;
             });
         }
     }
@@ -130,11 +138,19 @@ function refreshSimulatorsAndDevices(){
             let targetList    = _getTargetList( json);
             let iosSimulators = _getIosSimulators( tiInfos, iosMinVersion, targetList);
             let iosDevices    = _getIosDevices( tiInfos, iosMinVersion, targetList);
-            _addDevicesRadios( simulatorsListDiv, iosSimulators);
-            _addDevicesRadios( devicesListDiv, iosDevices);
+            _addDevicesRadios( simulatorsListDiv, iosSimulators, true);
+            _addDevicesRadios( devicesListDiv, iosDevices, false);
         }
         tools.getTiappJSON( html.getSelectedRadio( 'projectRadioGroup'), onGetTiappJSON);
     }
+
+    function loadingMessage( container){
+        if ( !container ) return;
+        html.empty( container)
+        html.createText( container, 'Chargement en cours...');
+    }
+    loadingMessage( simulatorsListDiv);
+    loadingMessage( devicesListDiv);
     tools.getTiInfos( onGetTiInfos);
 }
 
@@ -169,12 +185,20 @@ function run(){
     let device          = stateData.devices[ selectedDevice];
     tools.assert( simulator || device, "Aucun simulateur / device ne correspond à celui sélectionné");
     let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
+    let colors = {
+        '[DEBUG]' : config.get( 'console_debug'),
+        '[TRACE]' : config.get( 'console_trace'),
+        '[INFO]'  : config.get( 'console_info'),
+        '[ERROR]' : config.get( 'console_error'),
+        '[WARN]'  : config.get( 'console_warn'),
+        'normal'  : config.get( 'console_normal')
+    };
+console.log( simulator)
     let params = [];
-
     if ( device ) {
-        params = [ 'build', '-p', device.type,    '-C', '-T', 'device',    device.udid,    '-d', projectPath, '-V', 'Geoffrey Noel (384MHH926N)', '-P', '09c91634-7b77-43db-94aa-0cb896b69d54', '--skip-js-minify', 'true'];
+        params = [ 'build', '-p', device.type,    '-C', device.udid, '-T', 'device',        '-d', projectPath, '-V', 'Geoffrey Noel (384MHH926N)', '-P', '09c91634-7b77-43db-94aa-0cb896b69d54', '--skip-js-minify', 'true'];
     } else {
-        params = [ 'build', '-p', simulator.type, '-C', '-T', 'simulator', simulator.udid, '-d', projectPath, '--skip-js-minify', 'true', '--sim-focus', 'true' ];
+        params = [ 'build', '-p', simulator.type, '-C', simulator.udid, '-T', 'simulator', '-d', projectPath, '--log-level', config.get( 'simulator_min_log_level'), '--skip-js-minify', config.get( 'simulator_skip_js_minify'), '--sim-focus', config.get( 'simulator_sim_focus') ];
     }
     html.empty( consoleDiv);
     let runCmd = spawn('ti', params);
@@ -192,19 +216,12 @@ function run(){
 
   function log( text){
       function _getColor( _text){
-          var _keyWords = { //TODO : config
-              '[DEBUG]' : 'green',
-              '[TRACE]' : 'blue',
-              '[INFO]'  : 'white',
-              '[ERROR]' : 'red',
-              '[WARN]'  : 'orange',
-              '[INFO]'  : 'white'
-          };
+          if ( !colors ) return;
           _text || ( _text = '');
           let match = _text.match( /^\[\w+\]/);
-          if( !match ) return 'white';
+          if( !match ) return colors.normal;
           else {
-              return _keyWords[ match[0] || ''] || 'white';
+              return colors[ match[0] || ''] || colors.normal;
           }
       }
       text || ( text = '');

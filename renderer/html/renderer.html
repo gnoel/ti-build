@@ -7,14 +7,18 @@
   </head>
   <body>
     <div>
+        <input id="configBtn" type="button" value="Configuration" />
+
         <h3>Liste des projets</h3>
+        <input id="refeshProjectsBtn" type="button" value="Refresh projects" />
         <div id="projectsListDiv"></div>
     </div>
     <div>
-        <input id="runBtn" type="button" value="Run" />
+        <input id="runBtn" type="button" value="Run"/>
     </div>
     <div>
         <h3>Simulateurs</h3>
+        <input id="refeshDevicesBtn" type="button" value="Refresh devices"/>
         <div id="simulatorsListDiv"></div>
         <h3>Devices</h3>
         <div id="devicesListDiv"></div>
@@ -24,8 +28,6 @@
         <div id="console"></div>
     </div>
   </body>
-
-
 
   <script>
     require('./../js/renderer.js')

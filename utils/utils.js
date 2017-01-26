@@ -135,7 +135,7 @@ var html = {
         return p;
     },
 
-    createRadio : function( container, id, value, label, group, checked){
+    createRadio : function( container, id, value, label, group, checked, onChange){
         this._check( 'createRadio', container);
 
         let div = document.createElement('div');
@@ -146,6 +146,7 @@ var html = {
         radio.name    = group   || '';
         radio.checked = checked || false;
         radio.value   = value   || '';
+        if ( onChange ) radio.addEventListener( 'change', onChange);
 
         let lbl       = document.createElement( 'label');
         lbl.for       = id    || '';

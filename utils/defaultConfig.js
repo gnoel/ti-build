@@ -7,7 +7,13 @@ module.exports = {
         sim_focus      : 'true'
     },*/
     guid                 : 'ee3505de-0837-4714-9fff-047cc730bce4',
-    build_skip_js_minify : 'true',
-    build_min_log_level  : 'trace', // trace, debug, info, warn, error
-    build_sim_focus      : 'true'
+    simulator_skip_js_minify : 'true',
+    simulator_min_log_level  : 'trace', // trace, debug, info, warn, error
+    simulator_sim_focus      : 'true',
+    console_normal           : 'white',
+    console_trace            : 'blue',
+    console_debug            : 'green',
+    console_info             : 'white',
+    console_warn             : 'orange',
+    console_error            : 'red',
 }
