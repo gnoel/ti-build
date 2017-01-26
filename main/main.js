@@ -27,22 +27,22 @@ function createMainWindow () {
         protocol : 'file:',
         slashes  : true
     }));
-  //mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
   mainWindow.on('closed', function () {
     mainWindow = null
   })
 }
 
 function createConfigWindow () {
-    mainWindow = new BrowserWindow({width: 800, height: 700});
-    mainWindow.loadURL(url.format({
+    configWindow = new BrowserWindow({width: 800, height: 700});
+    configWindow.loadURL(url.format({
         pathname : path.join(__dirname, './../renderer/html/config.html'),
         protocol : 'file:',
         slashes  : true
     }));
-  //mainWindow.webContents.openDevTools()
-  mainWindow.on('closed', function () {
-    mainWindow = null
+  //configWindow.webContents.openDevTools()
+  configWindow.on('closed', function () {
+    configWindow = null
   })
 }
 

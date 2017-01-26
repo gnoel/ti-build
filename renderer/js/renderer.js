@@ -1,8 +1,8 @@
-const tools  = require( './../../tools/tools').tools;
-const config = require( './../../tools/config').config;
-const html   = require( './../../tools/html').html;
+const utils  = require( './../../utils/utils');
+const config = utils.config;
+const tools  = utils.tools;
+const html   = utils.html;
 const ipc    = require('electron').ipcRenderer;
-const fs     = require('fs');
 const path   = require('path');
 const spawn  = require('child_process').spawn;
 const _      = require('underscore');
@@ -53,7 +53,7 @@ function refreshProjectList(){
 function refreshSimulatorsAndDevices(){
     function _getIosMinVersion( _json){
         let min = parseFloat( _.min( _json['ios'][0]['min-ios-ver']));
-        return !isNaN( min) ? min : config.get( '_default_min_ios_version');
+        return !isNaN( min) ? min : config.get( 'default_min_ios_version');
     }
 
     function _getTargetList( _json){
@@ -66,7 +66,7 @@ function refreshSimulatorsAndDevices(){
     }
 
     function _getIosSimulators( _tiInfos, _minIosVersion, _targetList){
-        _minIosVersion || ( _minIosVersion = config.get( '_default_min_ios_version'));
+        _minIosVersion || ( _minIosVersion = config.get( 'default_min_ios_version'));
         _targetList    || ( targetList = {});
         let simulators = {};
         _.each( _tiInfos.ios.simulators.ios, function( simList, simVersion){
@@ -91,7 +91,7 @@ function refreshSimulatorsAndDevices(){
     }
 
     function _getIosDevices( _tiInfos, _minIosVersion, _targetList){
-        _minIosVersion || ( _minIosVersion = config.get( '_default_min_ios_version'));
+        _minIosVersion || ( _minIosVersion = config.get( 'default_min_ios_version'));
         _targetList    || ( targetList = {});
         let devices = {};
         _.each( _tiInfos.ios.devices, function( device){

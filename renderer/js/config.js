@@ -1,14 +1,27 @@
-const tools  = require( './../../tools/tools').tools;
-const config = require( './../../tools/config').config;
-const html   = require( './../../tools/html').html;
-const fs     = require('fs');
-const path   = require('path');
+const utils  = require( './../../utils/utils');
+const config = utils.config;
+const tools  = utils.tools;
+const html   = utils.html;
+const _      = require('underscore');
+
+const configDiv = document.getElementById( 'configDiv');
 
 (function(){
-    openConfigFile();
-}());
+    function save(){
+        if ( !ids || !ids.length ) return;
+        var data = {};
+        _.each( ids, function( id){
+            let elt = document.getElementById( id);
+            if ( !elt ) return;
+            data[ id] = elt.value;
+        });
+        config.writeConfigFile( data);
+    }
+    var conf = config.readConfigFile();
+    let ids = _.keys( conf);
 
-function openConfigFile(){
-    var userDir = app.getPath( 'userData');
-    alert( userDir)
-}
+    _.each( conf, function( value, id){
+        ids.push( id);
+        html.createTextInput( configDiv, id, id, value, save);
+    });
+}());
