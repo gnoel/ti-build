@@ -70,29 +70,20 @@ var tools = {
 };
 
 var config = {
-    _conf : null, // Cache
+    _cache : null, // Cache
     getConfigPath : function(){
         return CONFIG_PATH;
     },
     set : function( name, value){
         if ( !name ) return;
-        let node  = this._conf;
-        let props = name.split( '.');
-        props.forEach( function( prop, index){
-            let isLast = index === props.length;
-            if ( isLast ) node[ prop] = value;
-            else node = node[ prop] || {};
-        });
+        if ( !this._cache ) this._cache = this.readConfigFile();
+        this._cache[ name] = value;
+        this.writeConfigFile( this._cache);
     },
     get : function( name){
-        if ( !this._conf ) this._conf = this.readConfigFile();
-        if ( !name === null ) return '';
-        let value = this._conf;
-        let props = name.split( '.');
-        props.forEach( function( prop){
-            value = value[ prop] || {};
-        });
-        return value || '';
+        if ( !name ) return '';
+        if ( !this._cache ) this._cache = this.readConfigFile();
+        return this._cache[ name] || '';
     },
     readConfigFile : function(){
         this._buildConfigFile();
@@ -108,7 +99,7 @@ var config = {
     writeConfigFile : function( data){
         data || ( data = {});
         tools.file.writeFile( CONFIG_PATH, JSON.stringify( data, null, 4));
-        this._conf = null;
+        this._cache = null;
     },
     _buildConfigFile : function(){
         let configFile    = this._readConfigFile();

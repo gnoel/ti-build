@@ -1,24 +1,24 @@
-const utils  = require( './../../utils/utils');
-const config = utils.config;
-const tools  = utils.tools;
-const html   = utils.html;
-const ipc    = require('electron').ipcRenderer;
-const path   = require('path');
-const spawn  = require('child_process').spawn;
-const _      = require('underscore');
+const utils     = require( './../../utils/utils');
+const config    = utils.config;
+const tools     = utils.tools;
+const html      = utils.html;
+const ipc       = require('electron').ipcRenderer;
+const path      = require('path');
+const spawn     = require('child_process').spawn;
+const spawnSync = require('child_process').spawnSync;
+const _         = require('underscore');
 
 const projectsListDiv   = document.getElementById( 'projectsListDiv');
 const simulatorsListDiv = document.getElementById( 'simulatorsListDiv');
 const devicesListDiv    = document.getElementById( 'devicesListDiv');
+const provisioningDiv   = document.getElementById( 'provisioningDiv');
 const configBtn         = document.getElementById( 'configBtn');
 const runBtn            = document.getElementById( 'runBtn');
-const refeshDevicesBtn  = document.getElementById( 'refeshDevicesBtn');
-const refeshProjectsBtn = document.getElementById( 'refeshProjectsBtn');
+const refreshBtn        = document.getElementById( 'refreshBtn');
 const consoleDiv        = document.getElementById( 'console');
 
 configBtn.addEventListener( 'click', openConfig);
-refeshProjectsBtn.addEventListener( 'click', refreshProjectList);
-refeshDevicesBtn.addEventListener( 'click', refreshSimulatorsAndDevices);
+refreshBtn.addEventListener( 'click', refreshProjectList);
 runBtn.addEventListener( 'click', run);
 
 let stateData = {
@@ -48,8 +48,12 @@ function refreshProjectList(){
 
     html.empty( projectsListDiv);
     _.each( dirs, function( dir, index){
-        let id  = '_projectRadio_' + index + '_';
-        html.createRadio( projectsListDiv, id, dir, dir, 'projectRadioGroup', index === 0, refreshSimulatorsAndDevices);
+        var dirPath    = workspacePath + '/' + dir
+        let gitBranch  = spawnSync('git', [ '-C', dirPath, 'rev-parse', '--abbrev-ref', 'HEAD']);
+        let branchName = (gitBranch && gitBranch.stdout ? gitBranch.stdout.toString() : '').trim();
+        let label      = branchName ? ( dir + ' [' + branchName + ']') : dir;
+        let id         = '_projectRadio_' + index + '_';
+        html.createRadio( projectsListDiv, id, dir, label, 'projectRadioGroup', index === 0, refreshSimulatorsAndDevices);
     });
     refreshSimulatorsAndDevices();
 }
@@ -131,6 +135,48 @@ function refreshSimulatorsAndDevices(){
         }
     }
 
+    function _addProvisioning( _tiInfos){
+        function _saveProvisioning(){
+            config.set( 'provisioning_profile', html.getSelectedRadio( 'provioningRadioGroup'));
+        }
+        if ( !_tiInfos || !_tiInfos.ios || !_tiInfos.ios.provisioning ) return;
+        let defaultProvisioning = config.get( 'provisioning_profile');
+        function _display( proviList, title){
+            if ( !proviList || !proviList.length ) return;
+            _.each( proviList, function( provisioning){
+                if ( provisioning.expired ) return;
+                let uuid            = provisioning.uuid;
+                let expireDate      = new Date( provisioning.expirationDate);
+                let expireDateLabel = expireDate.getDate() + '/' + (expireDate.getMonth()+1) + '/' + expireDate.getFullYear();
+                let label           = title + ' : ' + provisioning.name + ' [Expire : ' + expireDateLabel + ']';
+                html.createRadio( provisioningDiv, uuid, uuid, label, 'provioningRadioGroup', uuid === defaultProvisioning, _saveProvisioning);
+            });
+        }
+        html.empty( provisioningDiv);
+        _display( _tiInfos.ios.provisioning.adhoc,        'Adhoc');
+        _display( _tiInfos.ios.provisioning.development,  'Developpement');
+        _display( _tiInfos.ios.provisioning.distribution, 'Distribution');
+    }
+
+    function _addCertificates( _tiInfos){
+        function _saveCertificate(){
+            config.set( 'certificate', html.getSelectedRadio( 'certificatesRadioGroup'));
+        }
+        if ( !_tiInfos || !_tiInfos.ios || !_tiInfos.ios.certs || !_tiInfos.ios.certs.keychains ) return;
+        let defaultCertificate = config.get( 'certificate');
+        html.empty( certificateDiv);
+        _.each( _tiInfos.ios.certs.keychains, function( keychain){
+            _.each( keychain, function( certificates, type){
+                _.each( certificates, function( certif){
+                    if ( certif.expired ) return;
+                    let name  = certif.name;
+                    let label = type + ' : ' + name;
+                    html.createRadio( certificateDiv, name, name, label, 'certificatesRadioGroup', name === defaultCertificate, _saveCertificate);
+                })
+            });
+        })
+    }
+
     function onGetTiInfos( tiInfos) {
         function onGetTiappJSON( json) {
             tools.assert( json, 'refreshSimulatorsAndDevices.onGetTiappJSON : No Tiapp Data');
@@ -142,6 +188,8 @@ function refreshSimulatorsAndDevices(){
             _addDevicesRadios( devicesListDiv, iosDevices, false);
         }
         tools.getTiappJSON( html.getSelectedRadio( 'projectRadioGroup'), onGetTiappJSON);
+        _addProvisioning( tiInfos);
+        _addCertificates( tiInfos);
     }
 
     function loadingMessage( container){
@@ -151,33 +199,13 @@ function refreshSimulatorsAndDevices(){
     }
     loadingMessage( simulatorsListDiv);
     loadingMessage( devicesListDiv);
+    loadingMessage( provisioningDiv);
+    loadingMessage( certificateDiv);
     tools.getTiInfos( onGetTiInfos);
 }
 
-/*config.set( 'build.skip_js_minify', 'false');
-console.log( config.get( 'build'))
-console.log( config.get( 'build.skip_js_minify'))
-console.log( '****************** A')
-
-config.set( 'build.skip_js_minify.newProps', 'false');
-console.log( config.get( 'build'))
-console.log( config.get( 'build.skip_js_minify.newProps'))
-console.log( '****************** B')
-
-config.set( 'test.propsTest', 'false');
-console.log( config.get( 'test'))
-console.log( config.get( 'test.propsTest'))
-console.log( '****************** C')
-
-
-config.set( 'test.propsTest2.subProps2', 'false');
-console.log( config.get( 'test'))
-console.log( config.get( 'test.propsTest2.subProps2'))
-console.log( '****************** D')*/
-
-
-//usr/local/bin/node /Users/geoffreynoel/.appcelerator/install/6.1.0/package/node_modules/titanium/lib/titanium.js build run --platform ios --log-level trace --sdk 5.5.1.GA --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition --target device --ios-version 10.1 --device-family ipad --developer-name Geoffrey Noel (384MHH926N) --device-id 77d01dec87f3cf013b769c37d69af16992980d8e --pp-uuid 09c91634-7b77-43db-94aa-0cb896b69d54 --no-colors --no-progress-bars --no-prompt --prompt-type socket-bundle --prompt-port 56571 --config-file /var/folders/3s/xlckpgq12bv_w9nx3893rz4c0000gp/T/build-1483889365300.json --no-banner --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition
-
+///usr/local/bin/node /Users/geoffreynoel/.appcelerator/install/6.1.0/package/node_modules/titanium/lib/titanium.js build run --platform ios --log-level trace --sdk 5.5.1.GA --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition --target device --ios-version 10.1 --device-family ipad --developer-name Geoffrey Noel (384MHH926N) --device-id 77d01dec87f3cf013b769c37d69af16992980d8e --pp-uuid 09c91634-7b77-43db-94aa-0cb896b69d54 --no-colors --no-progress-bars --no-prompt --prompt-type socket-bundle --prompt-port 56571 --config-file /var/folders/3s/xlckpgq12bv_w9nx3893rz4c0000gp/T/build-1483889365300.json --no-banner --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition
+///usr/local/bin/node /Users/geoffreynoel/.appcelerator/install/6.1.0/package/node_modules/titanium/lib/titanium.js build run --platform ios --log-level trace --sdk 5.5.1.GA --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/LadditionDev --target device --ios-version 10.1 --device-family ipad --developer-name Geoffrey Noel (384MHH926N) --device-id 77d01dec87f3cf013b769c37d69af16992980d8e --pp-uuid 09c91634-7b77-43db-94aa-0cb896b69d54 --no-colors --no-progress-bars --no-prompt --prompt-type socket-bundle --prompt-port 60653 --config-file /var/folders/3s/xlckpgq12bv_w9nx3893rz4c0000gp/T/build-1485476736253.json --no-banner --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/LadditionDev
 function run(){
     var selectedProject = html.getSelectedRadio( 'projectRadioGroup');
     var selectedDevice  = html.getSelectedRadio( 'deviceRadioGroup');
@@ -193,15 +221,18 @@ function run(){
         '[WARN]'  : config.get( 'console_warn'),
         'normal'  : config.get( 'console_normal')
     };
-console.log( simulator)
+
     let params = [];
+    let cmd    = '';
     if ( device ) {
-        params = [ 'build', '-p', device.type,    '-C', device.udid, '-T', 'device',        '-d', projectPath, '-V', 'Geoffrey Noel (384MHH926N)', '-P', '09c91634-7b77-43db-94aa-0cb896b69d54', '--skip-js-minify', 'true'];
+        cmd    = 'appc';
+        params = [ 'run',   '-p', device.type,    '-C', device.udid,    '-T', 'device',    '-d', projectPath, '--log-level', config.get( 'log_level'), '--skip-js-minify', config.get( 'skip_js_minify'), '-V', config.get( 'certificate'), '-P', config.get( 'provisioning_profile')];
     } else {
-        params = [ 'build', '-p', simulator.type, '-C', simulator.udid, '-T', 'simulator', '-d', projectPath, '--log-level', config.get( 'simulator_min_log_level'), '--skip-js-minify', config.get( 'simulator_skip_js_minify'), '--sim-focus', config.get( 'simulator_sim_focus') ];
+        cmd    = 'ti';
+        params = [ 'build', '-p', simulator.type, '-C', simulator.udid, '-T', 'simulator', '-d', projectPath, '--log-level', config.get( 'log_level'), '--sim-focus',      config.get( 'sim_focus') ];
     }
     html.empty( consoleDiv);
-    let runCmd = spawn('ti', params);
+    let runCmd = spawn( cmd, params);
     runCmd.stdout.on('data', function (data) {
       log( data.toString());
     });
@@ -225,6 +256,7 @@ console.log( simulator)
           }
       }
       text || ( text = '');
+      //console.log( text);
       let line  = html.createText( consoleDiv, text, _getColor( text));
       if ( line ) line.scrollIntoView();
   }
