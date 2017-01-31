@@ -1,7 +1,7 @@
 {
   "name": "Ti-build",
   "version": "1.0.0",
-  "description": "App to build your Appcelerator projets",
+  "description": "App to run your Appcelerator projets",
   "main": "main/main.js",
   "scripts": {
     "start": "electron ."

@@ -51,12 +51,16 @@ var tools = {
         }.bind( this));
     },
 
-    getTiappXML : function( projectDir){
+    getTiappPath : function( projectDir){
         var workspacePath = config.get( 'workspace');
-        if ( !workspacePath || !projectDir ) this.throwError( 'tools.getTiapp : Chemin du projet incomplet');
+        if ( !workspacePath || !projectDir ) this.throwError( 'tools.getTiappPath : Chemin du projet incomplet');
         var tiappPath = workspacePath + '/' + projectDir + '/tiapp.xml'
-        if ( !this.file.isFile( tiappPath) ) this.throwError( 'tools.getTiapp : Pas de fichier tiapp.xml dans ce projet');
-        return this.file.readFile( tiappPath);
+        if ( !this.file.isFile( tiappPath) ) this.throwError( 'tools.getTiappPath : Pas de fichier tiapp.xml dans ce projet');
+        return tiappPath;
+    },
+
+    getTiappXML : function( projectDir){
+        return this.file.readFile( this.getTiappPath( projectDir));
     },
 
     getTiappJSON : function( projectDir, callback){
@@ -126,30 +130,6 @@ var html = {
         return p;
     },
 
-    createRadio : function( container, id, value, label, group, checked, onChange){
-        this._check( 'createRadio', container);
-
-        let div = document.createElement('div');
-
-        let radio     = document.createElement( 'input');
-        radio.type    = 'radio';
-        radio.id      = id      || '';
-        radio.name    = group   || '';
-        radio.checked = checked || false;
-        radio.value   = value   || '';
-        if ( onChange ) radio.addEventListener( 'change', onChange);
-
-        let lbl       = document.createElement( 'label');
-        lbl.for       = id    || '';
-        lbl.innerText = label || '';
-
-        div.appendChild( radio);
-        div.appendChild( lbl);
-
-        container.appendChild( div);
-        return div;
-    },
-
     createTextInput : function( container, id, label, value, onKeyup){
         this._check( 'createTextInput', container);
 
@@ -170,6 +150,50 @@ var html = {
 
         container.appendChild( div);
         return div;
+    },
+
+    createSelect : function( container, id, label, onChange){
+        this._check( 'createSelect', container);
+        let div = document.createElement('div');
+
+        let lbl       = document.createElement( 'label');
+        lbl.for       = id     || '';
+        lbl.innerText = (label || '') + ' : ';
+
+        let select = document.createElement('select');
+        select.id  = id || '';
+        if ( onChange ) select.addEventListener( 'change', onChange);
+
+        div.appendChild( lbl);
+        div.appendChild( select);
+
+        container.appendChild( div);
+
+        return select;
+    },
+
+    addOptionToSelect : function( select, value, label, selected){
+        this._check( 'addOptionToSelect', select);
+
+        let option = document.createElement( 'option');
+        option.label = label || '';
+        if ( value    ) option.value    = value;
+        if ( selected ) option.selected = true;
+
+        select.appendChild( option);
+
+        return option;
+    },
+
+    getSelectedSelect : function( selectId){
+        tools.assert( document  && document.getElementsByName, 'html.getSelectedSelect : fonction exécutée dans le mauvais environnement');
+        tools.assert( selectId, 'html.getSelectedSelect : Select non existant');
+        const select = document.getElementById( selectId);
+        tools.assert( select, "Aucune élement Select trouvé : " + selectId);
+        let options = select.options;
+        if ( !options || !options.length ) return;
+        let selectedOpt = options[ select.selectedIndex] || null;
+        return selectedOpt ? selectedOpt.value : null;
     },
 
     getSelectedRadio : function( group){
