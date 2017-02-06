@@ -12,6 +12,7 @@ const projectsDiv     = document.getElementById( 'projectsDiv');
 const devicesDiv      = document.getElementById( 'devicesDiv');
 const provisioningDiv = document.getElementById( 'provisioningDiv');
 const configBtn       = document.getElementById( 'configBtn');
+const loginBtn        = document.getElementById( 'loginBtn');
 const runBtn          = document.getElementById( 'runBtn');
 const refreshBtn      = document.getElementById( 'refreshBtn');
 const consoleDiv      = document.getElementById( 'console');
@@ -19,6 +20,7 @@ const consoleDiv      = document.getElementById( 'console');
 configBtn.addEventListener( 'click', openConfig);
 refreshBtn.addEventListener( 'click', refreshProjectList);
 runBtn.addEventListener( 'click', run);
+loginBtn.addEventListener( 'click', login);
 
 let stateData = {
     simulators : {},
@@ -28,6 +30,10 @@ let stateData = {
 (function(){
     refreshProjectList();
 }());
+
+function login(){
+    spawnSync( 'appc', [ 'login', '-H', 'geoffrey.noel@geoffreynoel.fr', ''] )
+}
 
 function openConfig(){
     ipc.send('ipc-openConfig')
@@ -230,7 +236,7 @@ function run(){
     let cmd    = '';
     if ( device ) {
         cmd    = 'appc';
-        params = [ 'run',   '-p', device.type,    '-C', device.udid,    '-T', 'device',    '-d', projectPath, '--log-level', config.get( 'log_level'), '--skip-js-minify', config.get( 'skip_js_minify'), '-V', config.get( 'certificate'), '-P', config.get( 'provisioning_profile')];
+        params = [ 'run',   '-p', device.type,    '-C', device.udid,    '-T', 'device',    '-d', projectPath, '--log-level', config.get( 'log_level'), '--skip-js-minify', config.get( 'skip_js_minify'), '-V', config.get( 'certificate'), '-P', config.get( 'provisioning_profile'), '--username', config.get( 'login'), '--password', config.get( 'password')];
     } else {
         cmd    = 'ti';
         params = [ 'build', '-p', simulator.type, '-C', simulator.udid, '-T', 'simulator', '-d', projectPath, '--log-level', config.get( 'log_level'), '--sim-focus',      config.get( 'sim_focus') ];
@@ -241,7 +247,9 @@ let modifiedTiapp = originalTiapp.replace( /<guid>.{36}<\/guid>/gi, '<guid>' + c
 let tiappPath     = tools.getTiappPath( selectedProject);
 
 tools.file.writeFile( tiappPath, modifiedTiapp);
-let tiappIsModified = true;
+setTimeout( function(){
+    tools.file.writeFile( tiappPath, originalTiapp);
+}, 10000);
 
 html.empty( consoleDiv);
 let runCmd = spawn( cmd, params);
@@ -268,10 +276,7 @@ runCmd.on('exit', function (code) {
           }
       }
       text || ( text = '');
-      //console.log( text);
       let line  = html.createText( consoleDiv, text, _getColor( text));
       if ( line ) line.scrollIntoView();
-      if ( tiappIsModified ) tools.file.writeFile( tiappPath, originalTiapp);
-      tiappIsModified = false;
   }
 }

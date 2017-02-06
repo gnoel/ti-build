@@ -1,6 +1,8 @@
 module.exports = {
     workspace               : '/Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace',
     guid                    : 'ee3505de-0837-4714-9fff-047cc730bce4',
+    login                   : 'geoffrey.noel@geoffreynoel.fr',
+    password                : '',
     provisioning_profile    : '',
     certificate             : '',
     skip_js_minify          : 'true',

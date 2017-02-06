@@ -138,7 +138,7 @@ var html = {
         lbl.innerText = (label || '') + ' : ';
 
         let input     = document.createElement( 'input');
-        input.type    = 'text';
+        input.type    = id !== 'password' ? 'text' : 'password';
         input.id      = id      || '';
         input.value   = value   || '';
         if ( onKeyup ) input.addEventListener( 'keyup', onKeyup);
