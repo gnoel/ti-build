@@ -74,20 +74,19 @@ var tools = {
 };
 
 var config = {
-    _cache : null, // Cache
     getConfigPath : function(){
         return CONFIG_PATH;
     },
     set : function( name, value){
         if ( !name ) return;
-        if ( !this._cache ) this._cache = this.readConfigFile();
-        this._cache[ name] = value;
-        this.writeConfigFile( this._cache);
+        let conf = this.readConfigFile();
+        conf[ name] = value;
+        this.writeConfigFile( conf);
     },
     get : function( name){
         if ( !name ) return '';
-        if ( !this._cache ) this._cache = this.readConfigFile();
-        return this._cache[ name] || '';
+        let conf = this.readConfigFile();
+        return conf[ name] || '';
     },
     readConfigFile : function(){
         this._buildConfigFile();
@@ -103,7 +102,6 @@ var config = {
     writeConfigFile : function( data){
         data || ( data = {});
         tools.file.writeFile( CONFIG_PATH, JSON.stringify( data, null, 4));
-        this._cache = null;
     },
     _buildConfigFile : function(){
         let configFile    = this._readConfigFile();

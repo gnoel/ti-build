@@ -106,6 +106,7 @@ function refreshSimulatorsAndDevices(){
         _minIosVersion || ( _minIosVersion = config.get( 'default_min_ios_version'));
         _targetList    || ( targetList = {});
         let devices = {};
+        _targetList.ipod = _targetList.iphone; // Pour trouver les iPod si le projet est de type iPhone
         _.each( _tiInfos.ios.devices, function( device){
             var deviceClass = (device.deviceClass || '').toLowerCase();
             if ( !_targetList[ deviceClass] || device.productVersion < _minIosVersion ) return;
@@ -239,27 +240,22 @@ let originalTiapp = tools.getTiappXML( selectedProject);
 let modifiedTiapp = originalTiapp.replace( /<guid>.{36}<\/guid>/gi, '<guid>' + config.get( 'guid') + '</guid>');
 let tiappPath     = tools.getTiappPath( selectedProject);
 
-console.log( originalTiapp)
-console.log( '********************')
-console.log( modifiedTiapp)
-//tools.file.writeFile( tiappPath, modifiedTiapp);
+tools.file.writeFile( tiappPath, modifiedTiapp);
+let tiappIsModified = true;
 
 html.empty( consoleDiv);
 let runCmd = spawn( cmd, params);
 runCmd.stdout.on('data', function (data) {
-  log( data.toString());
-  //tools.file.writeFile( tiappPath, originalTiapp);
+    log( data.toString());
 });
 
 runCmd.stderr.on('data', function (data) {
-  log( data.toString());
+    log( data.toString());
 });
 
 runCmd.on('exit', function (code) {
-  log('child process exited with code ' + code.toString());
+    if ( !code ) log( '**** Fin de la console ****');
 });
-
-
 
   function log( text){
       function _getColor( _text){
@@ -275,5 +271,7 @@ runCmd.on('exit', function (code) {
       //console.log( text);
       let line  = html.createText( consoleDiv, text, _getColor( text));
       if ( line ) line.scrollIntoView();
+      if ( tiappIsModified ) tools.file.writeFile( tiappPath, originalTiapp);
+      tiappIsModified = false;
   }
 }

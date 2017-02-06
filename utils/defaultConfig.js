@@ -4,13 +4,13 @@ module.exports = {
     provisioning_profile    : '',
     certificate             : '',
     skip_js_minify          : 'true',
-    log_level               : 'trace', // trace, debug, info, warn, error
+    log_level               : 'debug', // trace, debug, info, warn, error
     sim_focus               : 'true',
-    console_normal          : 'white',
-    console_trace           : 'blue',
-    console_debug           : 'green',
-    console_info            : 'white',
-    console_warn            : 'orange',
-    console_error           : 'red',
+    console_normal          : '#aab1bd',
+    console_trace           : '#5ab6c1',
+    console_debug           : '#99c27c',
+    console_info            : '#c57bdb',
+    console_warn            : '#d09a6a',
+    console_error           : '#de6d77',
     default_min_ios_version : 7 // Ne pas changer
 }
