@@ -7,15 +7,22 @@
   </head>
   <body>
     <div>
-        <input id="configBtn"  type="button" value="Configuration" />
-        <input id="loginBtn"   type="button" value="Login" />
-        <input id="refreshBtn" type="button" value="Refresh" />
-        <input id="runBtn"     type="button" value="Run"/>
+        <table>
+            <tr>
+                <td> <div id="projectsDiv"></div> </td>
+                <td> <div id="provisioningDiv"></div> </td>
+            </tr>
 
-        <div id="projectsDiv"></div>
-        <div id="devicesDiv"></div>
-        <div id="provisioningDiv"></div>
-        <div id="certificateDiv"></div>
+            <tr>
+                <td> <div id="devicesDiv"></div> </td>
+                <td> <div id="certificateDiv"></div> </td>
+            </tr>
+        </table>
+
+        <input id="runBtn"     type="button" value="Run"/>
+        <input id="refreshBtn" type="button" value="Refresh" />
+        <input id="configBtn"  type="button" value="Configuration" />
+        <!--<input id="loginBtn"   type="button" value="Login" />-->
     </div>
 
     <div id="logger">

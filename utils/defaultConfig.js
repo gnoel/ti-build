@@ -1,7 +1,7 @@
 module.exports = {
-    workspace               : '/Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace',
-    guid                    : 'ee3505de-0837-4714-9fff-047cc730bce4',
-    login                   : 'geoffrey.noel@geoffreynoel.fr',
+    workspace               : '/Users/[USERNAME]/Documents/Appcelerator_Studio_Workspace',
+    guid                    : '',
+    login                   : '',
     password                : '',
     provisioning_profile    : '',
     certificate             : '',
@@ -14,5 +14,7 @@ module.exports = {
     console_info            : '#c57bdb',
     console_warn            : '#d09a6a',
     console_error           : '#de6d77',
-    default_min_ios_version : 7 // Ne pas changer
+    default_min_ios_version : 7, // Ne pas changer
+    tiapp_reset_time        : '5000',
+    run_event_F5_or_F6      : 'F5',
 }

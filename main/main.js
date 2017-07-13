@@ -1,24 +1,15 @@
-const electron = require('electron');
+const { BrowserWindow, app, shell, dialog, globalShortcut, ipcMain } = require('electron');
 // Module to control application life.
-const app = electron.app;
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow;
 
 const path = require('path');
 const url  = require('url');
 
-const shell = require('electron').shell;
-
 const os     = require('os');
-const dialog = require('electron').dialog;
-const ipc    = require('electron').ipcMain;
-
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 let configWindow;
-//console.log( app.getPath( 'userData'))
 
 function createMainWindow () {
     mainWindow = new BrowserWindow({width: 1000, height: 800});
@@ -27,6 +18,15 @@ function createMainWindow () {
         protocol : 'file:',
         slashes  : true
     }));
+
+    globalShortcut.register('F5', () => {
+        mainWindow.webContents.send('refreshF5');
+    })
+
+    globalShortcut.register('F6', () => {
+        mainWindow.webContents.send('refreshF6');
+    })
+
   //mainWindow.webContents.openDevTools()
   mainWindow.on('closed', function () {
     mainWindow = null
@@ -61,6 +61,6 @@ app.on('activate', function () {
     }
 });
 
-ipc.on('ipc-openConfig', (event) => {
+ipcMain.on('ipc-openConfig', (event) => {
     createConfigWindow();
 })

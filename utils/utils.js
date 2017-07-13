@@ -121,7 +121,7 @@ var html = {
 
     createText : function( container, text, color){
         this._check( 'createText', container);
-        let p = document.createElement('p');
+        let p = document.createElement('pre');
         p.innerText   = text  || '';
         p.style.color = color || '';
         container.appendChild( p);
