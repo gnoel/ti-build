@@ -12,7 +12,6 @@ const projectsDiv     = document.getElementById( 'projectsDiv');
 const devicesDiv      = document.getElementById( 'devicesDiv');
 const provisioningDiv = document.getElementById( 'provisioningDiv');
 const configBtn       = document.getElementById( 'configBtn');
-//const loginBtn        = document.getElementById( 'loginBtn');
 const runBtn          = document.getElementById( 'runBtn');
 const refreshBtn      = document.getElementById( 'refreshBtn');
 const consoleDiv      = document.getElementById( 'console');
@@ -20,7 +19,6 @@ const consoleDiv      = document.getElementById( 'console');
 configBtn.addEventListener( 'click', openConfig);
 refreshBtn.addEventListener( 'click', refreshProjectList);
 runBtn.addEventListener( 'click', run);
-//loginBtn.addEventListener( 'click', login);
 
 // TODO : GROS REFACTO de ce truc bien crade
 ipc.on('refreshF5', function(){
@@ -42,10 +40,6 @@ let stateData = {
 (function(){
     refreshProjectList();
 }());
-
-/*function login(){
-    spawnSync( 'appc', [ 'login', '-H', 'geoffrey.noel@geoffreynoel.fr', ''] )
-}*/
 
 function openConfig(){
     ipc.send('ipc-openConfig')
@@ -229,7 +223,6 @@ function refreshSimulatorsAndDevices(){
 ///usr/local/bin/node /Users/geoffreynoel/.appcelerator/install/6.1.0/package/node_modules/titanium/lib/titanium.js build run --platform ios --log-level trace --sdk 5.5.1.GA --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition --target device --ios-version 10.1 --device-family ipad --developer-name Geoffrey Noel (384MHH926N) --device-id 77d01dec87f3cf013b769c37d69af16992980d8e --pp-uuid 09c91634-7b77-43db-94aa-0cb896b69d54 --no-colors --no-progress-bars --no-prompt --prompt-type socket-bundle --prompt-port 56571 --config-file /var/folders/3s/xlckpgq12bv_w9nx3893rz4c0000gp/T/build-1483889365300.json --no-banner --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition
 ///usr/local/bin/node /Users/geoffreynoel/.appcelerator/install/6.1.0/package/node_modules/titanium/lib/titanium.js build run --platform ios --log-level trace --sdk 5.5.1.GA --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/LadditionDev --target device --ios-version 10.1 --device-family ipad --developer-name Geoffrey Noel (384MHH926N) --device-id 77d01dec87f3cf013b769c37d69af16992980d8e --pp-uuid 09c91634-7b77-43db-94aa-0cb896b69d54 --no-colors --no-progress-bars --no-prompt --prompt-type socket-bundle --prompt-port 60653 --config-file /var/folders/3s/xlckpgq12bv_w9nx3893rz4c0000gp/T/build-1485476736253.json --no-banner --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/LadditionDev
 let runCmd = null;
-let originalTiapp = null;
 function run(){
     var selectedProject = html.getSelectedSelect( 'projectList');
     var selectedDevice  = html.getSelectedSelect( 'deviceList');
@@ -237,11 +230,9 @@ function run(){
     let device          = stateData.devices[ selectedDevice];
 
     if ( runCmd ) {
-        let tiappPath     = tools.getTiappPath( selectedProject);
-        if ( originalTiapp ) tools.file.writeFile( tiappPath, originalTiapp);
         runCmd.kill();
     }
-    
+
     tools.assert( simulator || device, "Aucun simulateur / device ne correspond à celui sélectionné");
     let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
     let colors = {
@@ -253,24 +244,17 @@ function run(){
         'normal'  : config.get( 'console_normal')
     };
 
+    let provisionningProfile = html.getSelectedSelect( 'provisioningList') || config.get( 'provisioning_profile');
+    let certificate          = html.getSelectedSelect( 'certificateList')  || config.get( 'certificate');
     let params = [];
     let cmd    = '';
     if ( device ) {
-        cmd    = 'appc';
-        params = [ 'run',   '-p', device.type,    '-C', device.udid,    '-T', 'device',    '-d', projectPath, '--log-level', config.get( 'log_level'), '--skip-js-minify', config.get( 'skip_js_minify'), '-V', config.get( 'certificate'), '-P', config.get( 'provisioning_profile'), '--username', config.get( 'login'), '--password', config.get( 'password')];
+        cmd    = 'ti';
+        params = [ 'build', '-p', device.type, '-C', device.udid, '-D', 'development', /*'--sdk', '6.1.1.GA',*/ '-T', 'device', '-d', projectPath, '--log-level', config.get( 'log_level'), '--skip-js-minify', config.get( 'skip_js_minify'), '-V', certificate, '-P', provisionningProfile ];
     } else {
         cmd    = 'ti';
-        params = [ 'build', '-p', simulator.type, '-C', simulator.udid, '-T', 'simulator', '-d', projectPath, '--log-level', config.get( 'log_level'), '--sim-focus',      config.get( 'sim_focus') ];
+        params = [ 'build', '-p', simulator.type, '-C', simulator.udid, '-T', 'simulator', /*'--sdk', '6.1.1.GA',*/ '-d', projectPath, '--log-level', config.get( 'log_level'), '--sim-focus', config.get( 'sim_focus') ];
     }
-
-originalTiapp = tools.getTiappXML( selectedProject);
-let modifiedTiapp = originalTiapp.replace( /<guid>.{36}<\/guid>/gi, '<guid>' + config.get( 'guid') + '</guid>');
-let tiappPath     = tools.getTiappPath( selectedProject);
-
-tools.file.writeFile( tiappPath, modifiedTiapp);
-setTimeout( function(){
-    tools.file.writeFile( tiappPath, originalTiapp);
-}, config.get( 'tiapp_reset_time'));
 
 html.empty( consoleDiv);
 
