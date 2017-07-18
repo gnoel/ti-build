@@ -3,6 +3,7 @@ const config    = utils.config;
 const tools     = utils.tools;
 const html      = utils.html;
 const ipc       = require('electron').ipcRenderer;
+const clipboard = require('electron').clipboard;
 const path      = require('path');
 const spawn     = require('child_process').spawn;
 const spawnSync = require('child_process').spawnSync;
@@ -348,7 +349,8 @@ function openDB() {
 
     let appDir = dirs[0];
     tools.assert( appDir, 'Aucune application installée sur ce simulateur');
-
-    let path = [ pathA + appDir + '/Library/Private Documents/'];
+    let goodPath = pathA + appDir + '/Library/Private Documents/';
+    clipboard.writeText( goodPath + 'addition.sql');
+    let path = [ goodPath];
     var cmd = spawn( 'open', path);
 }
