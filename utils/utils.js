@@ -78,11 +78,11 @@ var tools = {
 
 var config = {
     logLevel : [
-        "Trace",
-        "Debug",
-        "Info",
-        "Warning",
-        "Error",
+        "trace",
+        "debug",
+        "info",
+        "warning",
+        "error",
     ],
     getConfigPath : function(){
         return CONFIG_PATH;
