@@ -14,11 +14,13 @@ const provisioningDiv = document.getElementById( 'provisioningDiv');
 const configBtn       = document.getElementById( 'configBtn');
 const runBtn          = document.getElementById( 'runBtn');
 const refreshBtn      = document.getElementById( 'refreshBtn');
+const stopBtn         = document.getElementById( 'stopBtn');
 const consoleDiv      = document.getElementById( 'console');
 
 configBtn.addEventListener( 'click', openConfig);
 refreshBtn.addEventListener( 'click', refreshProjectList);
 runBtn.addEventListener( 'click', run);
+stopBtn.addEventListener( 'click', stopProcess);
 
 // TODO : GROS REFACTO de ce truc bien crade
 ipc.on('refreshF5', function(){
@@ -220,18 +222,14 @@ function refreshSimulatorsAndDevices(){
     tools.getTiInfos( onGetTiInfos);
 }
 
-///usr/local/bin/node /Users/geoffreynoel/.appcelerator/install/6.1.0/package/node_modules/titanium/lib/titanium.js build run --platform ios --log-level trace --sdk 5.5.1.GA --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition --target device --ios-version 10.1 --device-family ipad --developer-name Geoffrey Noel (384MHH926N) --device-id 77d01dec87f3cf013b769c37d69af16992980d8e --pp-uuid 09c91634-7b77-43db-94aa-0cb896b69d54 --no-colors --no-progress-bars --no-prompt --prompt-type socket-bundle --prompt-port 56571 --config-file /var/folders/3s/xlckpgq12bv_w9nx3893rz4c0000gp/T/build-1483889365300.json --no-banner --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/Laddition
-///usr/local/bin/node /Users/geoffreynoel/.appcelerator/install/6.1.0/package/node_modules/titanium/lib/titanium.js build run --platform ios --log-level trace --sdk 5.5.1.GA --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/LadditionDev --target device --ios-version 10.1 --device-family ipad --developer-name Geoffrey Noel (384MHH926N) --device-id 77d01dec87f3cf013b769c37d69af16992980d8e --pp-uuid 09c91634-7b77-43db-94aa-0cb896b69d54 --no-colors --no-progress-bars --no-prompt --prompt-type socket-bundle --prompt-port 60653 --config-file /var/folders/3s/xlckpgq12bv_w9nx3893rz4c0000gp/T/build-1485476736253.json --no-banner --project-dir /Users/geoffreynoel/Documents/Appcelerator_Studio_Workspace/LadditionDev
 let runCmd = null;
 function run(){
+    stopProcess();
+
     var selectedProject = html.getSelectedSelect( 'projectList');
     var selectedDevice  = html.getSelectedSelect( 'deviceList');
     let simulator       = stateData.simulators[ selectedDevice];
     let device          = stateData.devices[ selectedDevice];
-
-    if ( runCmd ) {
-        runCmd.kill();
-    }
 
     tools.assert( simulator || device, "Aucun simulateur / device ne correspond à celui sélectionné");
     let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
@@ -246,32 +244,66 @@ function run(){
 
     let provisionningProfile = html.getSelectedSelect( 'provisioningList') || config.get( 'provisioning_profile');
     let certificate          = html.getSelectedSelect( 'certificateList')  || config.get( 'certificate');
-    let params = [];
+    /*let params = [];
     let cmd    = '';
     if ( device ) {
         cmd    = 'ti';
-        params = [ 'build', '-p', device.type, '-C', device.udid, '-D', 'development', /*'--sdk', '6.1.1.GA',*/ '-T', 'device', '-d', projectPath, '--log-level', config.get( 'log_level'), '--skip-js-minify', config.get( 'skip_js_minify'), '-V', certificate, '-P', provisionningProfile ];
+        params = [ 'build', '-p', device.type, '-C', device.udid, '-D', 'development', '-T', 'device', '-d', projectPath, '--log-level', config.get( 'log_level'), '--skip-js-minify', config.get( 'skip_js_minify'), '-V', certificate, '-P', provisionningProfile ];
     } else {
         cmd    = 'ti';
-        params = [ 'build', '-p', simulator.type, '-C', simulator.udid, '-T', 'simulator', /*'--sdk', '6.1.1.GA',*/ '-d', projectPath, '--log-level', config.get( 'log_level'), '--sim-focus', config.get( 'sim_focus') ];
+        params = [ 'build', '-p', simulator.type, '-C', simulator.udid, '-T', 'simulator', '-d', projectPath, '--log-level', config.get( 'log_level'), '--sim-focus', config.get( 'sim_focus') ];
+    }*/
+
+    let cmd    = 'ti';
+    let params = [];
+    params.push( 'build');
+    params.push( '-D');
+    params.push( 'development');
+    params.push( '-d');
+    params.push( projectPath);
+    params.push( '--log-level');
+    params.push( config.get( 'log_level'));
+
+    if ( device ) {
+        params.push( '-p');
+        params.push( device.type);
+        params.push( '-C');
+        params.push( device.udid);
+        params.push( '-T');
+        params.push( 'device');
+        params.push( '--skip-js-minify');
+        params.push( config.get( 'skip_js_minify'));
+        params.push( '-V');
+        params.push( certificate);
+        params.push( '-P');
+        params.push( provisionningProfile);
+    } else {
+        params.push( '-p');
+        params.push( simulator.type);
+        params.push( '-C');
+        params.push( simulator.udid);
+        params.push( '-T');
+        params.push( 'simulator');
+        params.push( '--sim-focus');
+        params.push( config.get( 'sim_focus'));
     }
 
-html.empty( consoleDiv);
+    html.empty( consoleDiv);
 
-runCmd = spawn( cmd, params);
-runCmd.stdout.on('data', function (data) {
-    log( data.toString());
-});
+    runCmd = spawn( cmd, params);
+    runCmd.stdout.on('data', function (data) {
+        log( data.toString());
+    });
 
-runCmd.stderr.on('data', function (data) {
-    log( data.toString());
-});
+    runCmd.stderr.on('data', function (data) {
+        log( data.toString());
+    });
 
-runCmd.on('exit', function (code) {
-    if ( !code ) log( '**** Kill du process ****');
-});
+    runCmd.on('exit', function (code) {
+        if ( !code ) log( '**** Kill du process ****');
+    });
 
-log( '* RUN *');
+    log( '* RUN *');
 
   function log( text){
       function _getColor( _text){
@@ -287,4 +319,8 @@ log( '* RUN *');
       let line  = html.createText( consoleDiv, text, _getColor( text));
       if ( line ) line.scrollIntoView();
   }
+}
+
+function stopProcess(){
+    if ( runCmd ) runCmd.kill();
 }
