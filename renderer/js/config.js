@@ -19,9 +19,18 @@ const configDiv = document.getElementById( 'configDiv');
     }
     var conf = config.readConfigFile();
     let ids = _.keys( conf);
-
     _.each( conf, function( value, id){
         ids.push( id);
-        html.createTextInput( configDiv, id, id, value, save);
+        if( id.indexOf('console_') !== -1 ){
+            html.createColorInput( configDiv, id, id, value, save);
+         }else if( id == "log_level"){
+            var select  = html.createSelect( configDiv, id, id, save);
+            for (var i = config.logLevel.length - 1; i >= 0; i--) {
+                var opt = config.logLevel[i];
+                html.addOptionToSelect(select, opt, opt, opt.toLowerCase() == value.toLowerCase() ? true : false);
+            };
+         }else{
+            html.createTextInput( configDiv, id, id, value, save);
+         }
     });
 }());
