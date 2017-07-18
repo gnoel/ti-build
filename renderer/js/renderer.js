@@ -333,7 +333,7 @@ function openDB() {
     var selectedDevice = html.getSelectedSelect( 'deviceList');
     let simulator      = stateData.simulators[ selectedDevice];
     tools.assert( simulator, 'Action disponible uniquement pour un simulateur');
-    let pathA      = '/Users/geoffreynoel/Library/Developer/CoreSimulator/Devices/' + simulator.udid + '/data/Containers/Data/Application/';
+    let pathA      = '/Users/' + config.get( 'username') + '/Library/Developer/CoreSimulator/Devices/' + simulator.udid + '/data/Containers/Data/Application/';
     let dirContent = tools.file.readDir( pathA);
 
     let dirs       = dirContent.filter( function( name){
