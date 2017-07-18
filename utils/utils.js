@@ -35,6 +35,9 @@ var tools = {
         },
         writeFile : function( path, content){
             fs.writeFileSync( path, content);
+        },
+        getInfos : function( path){
+            return fs.lstatSync( path);
         }
     },
     getTiInfos : function( callback){

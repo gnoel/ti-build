@@ -13,4 +13,5 @@ module.exports = {
     console_error           : '#de6d77',
     default_min_ios_version : 7, // Ne pas changer
     run_event_F5_or_F6      : 'F5',
+    username                : '',
 }

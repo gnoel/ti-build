@@ -15,12 +15,14 @@ const configBtn       = document.getElementById( 'configBtn');
 const runBtn          = document.getElementById( 'runBtn');
 const refreshBtn      = document.getElementById( 'refreshBtn');
 const stopBtn         = document.getElementById( 'stopBtn');
+const openDbBtn       = document.getElementById( 'openDbBtn');
 const consoleDiv      = document.getElementById( 'console');
 
 configBtn.addEventListener( 'click', openConfig);
 refreshBtn.addEventListener( 'click', refreshProjectList);
 runBtn.addEventListener( 'click', run);
 stopBtn.addEventListener( 'click', stopProcess);
+openDbBtn.addEventListener( 'click', openDB);
 
 // TODO : GROS REFACTO de ce truc bien crade
 ipc.on('refreshF5', function(){
@@ -316,11 +318,37 @@ function run(){
           }
       }
       text || ( text = '');
+      text = text.trim();
       let line  = html.createText( consoleDiv, text, _getColor( text));
+      console.log( text[text.length-1] == '\n')
       if ( line ) line.scrollIntoView();
   }
 }
 
 function stopProcess(){
     if ( runCmd ) runCmd.kill();
+}
+
+function openDB() {
+    var selectedDevice = html.getSelectedSelect( 'deviceList');
+    let simulator      = stateData.simulators[ selectedDevice];
+    tools.assert( simulator, 'Action disponible uniquement pour un simulateur');
+    let pathA      = '/Users/geoffreynoel/Library/Developer/CoreSimulator/Devices/' + simulator.udid + '/data/Containers/Data/Application/';
+    let dirContent = tools.file.readDir( pathA);
+
+    let dirs       = dirContent.filter( function( name){
+        return tools.file.isDirectory( pathA + name);
+    });
+
+    dirs.sort( function( a, b){
+        let dirA = tools.file.getInfos( pathA + a);
+        let dirB = tools.file.getInfos( pathA + b);
+        return dirA.birthtime > dirB.birthtime ? -1 : 1;
+    });
+
+    let appDir = dirs[0];
+    tools.assert( appDir, 'Aucune application installée sur ce simulateur');
+
+    let path = [ pathA + appDir + '/Library/Private Documents/'];
+    var cmd = spawn( 'open', path);
 }
