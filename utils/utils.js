@@ -74,6 +74,13 @@ var tools = {
 };
 
 var config = {
+    logLevel : [
+        "Trace",
+        "Debug",
+        "Info",
+        "Warning",
+        "Error",
+    ],
     getConfigPath : function(){
         return CONFIG_PATH;
     },
@@ -142,6 +149,28 @@ var html = {
         input.id      = id      || '';
         input.value   = value   || '';
         if ( onKeyup ) input.addEventListener( 'keyup', onKeyup);
+
+        div.appendChild( lbl);
+        div.appendChild( input);
+
+        container.appendChild( div);
+        return div;
+    },
+
+    createColorInput : function( container, id, label, value, onChange){
+        this._check( 'createColorInput', container);
+
+        let div = document.createElement('div');
+
+        let lbl       = document.createElement( 'label');
+        lbl.for       = id    || '';
+        lbl.innerText = (label || '') + ' : ';
+
+        let input     = document.createElement( 'input');
+        input.type    = 'color';
+        input.id      = id      || '';
+        input.value   = value   || '';
+        if ( onChange ) input.addEventListener( 'change', onChange);
 
         div.appendChild( lbl);
         div.appendChild( input);
