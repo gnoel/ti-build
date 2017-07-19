@@ -1,3 +1,8 @@
+body {
+    margin : 0px;
+    padding : 0px;
+}
+
 #logger {
     background-color : #282c34;
     width  : 100%;

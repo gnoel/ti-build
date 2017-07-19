@@ -17,6 +17,7 @@ const runBtn          = document.getElementById( 'runBtn');
 const refreshBtn      = document.getElementById( 'refreshBtn');
 const stopBtn         = document.getElementById( 'stopBtn');
 const openDbBtn       = document.getElementById( 'openDbBtn');
+const gitPullBtn      = document.getElementById( 'gitPullBtn');
 const consoleDiv      = document.getElementById( 'console');
 
 configBtn.addEventListener( 'click', openConfig);
@@ -24,6 +25,7 @@ refreshBtn.addEventListener( 'click', refreshProjectList);
 runBtn.addEventListener( 'click', run);
 stopBtn.addEventListener( 'click', stopProcess);
 openDbBtn.addEventListener( 'click', openDB);
+//gitPullBtn.addEventListener( 'click', gitPull);
 
 // TODO : GROS REFACTO de ce truc bien crade
 ipc.on('refreshF5', function(){
@@ -236,26 +238,9 @@ function run(){
 
     tools.assert( simulator || device, "Aucun simulateur / device ne correspond à celui sélectionné");
     let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
-    let colors = {
-        '[DEBUG]' : config.get( 'console_debug'),
-        '[TRACE]' : config.get( 'console_trace'),
-        '[INFO]'  : config.get( 'console_info'),
-        '[ERROR]' : config.get( 'console_error'),
-        '[WARN]'  : config.get( 'console_warn'),
-        'normal'  : config.get( 'console_normal')
-    };
 
     let provisionningProfile = html.getSelectedSelect( 'provisioningList') || config.get( 'provisioning_profile');
     let certificate          = html.getSelectedSelect( 'certificateList')  || config.get( 'certificate');
-    /*let params = [];
-    let cmd    = '';
-    if ( device ) {
-        cmd    = 'ti';
-        params = [ 'build', '-p', device.type, '-C', device.udid, '-D', 'development', '-T', 'device', '-d', projectPath, '--log-level', config.get( 'log_level'), '--skip-js-minify', config.get( 'skip_js_minify'), '-V', certificate, '-P', provisionningProfile ];
-    } else {
-        cmd    = 'ti';
-        params = [ 'build', '-p', simulator.type, '-C', simulator.udid, '-T', 'simulator', '-d', projectPath, '--log-level', config.get( 'log_level'), '--sim-focus', config.get( 'sim_focus') ];
-    }*/
 
     let cmd    = 'ti';
     let params = [];
@@ -303,27 +288,36 @@ function run(){
     });
 
     runCmd.on('exit', function (code) {
-        if ( !code ) log( '**** Kill du process ****');
+        if ( !code ) log( '**** Compilation stopped ****');
     });
 
     log( '* RUN *');
+}
 
-  function log( text){
-      function _getColor( _text){
-          if ( !colors ) return;
-          _text || ( _text = '');
-          let match = _text.match( /^\[\w+\]/);
-          if( !match ) return colors.normal;
-          else {
-              return colors[ match[0] || ''] || colors.normal;
-          }
-      }
-      text || ( text = '');
-      text = text.trim();
-      let line  = html.createText( consoleDiv, text, _getColor( text));
-      console.log( text[text.length-1] == '\n')
-      if ( line ) line.scrollIntoView();
-  }
+let colors = {
+    '[DEBUG]' : config.get( 'console_debug'),
+    '[TRACE]' : config.get( 'console_trace'),
+    '[INFO]'  : config.get( 'console_info'),
+    '[ERROR]' : config.get( 'console_error'),
+    '[WARN]'  : config.get( 'console_warn'),
+    'normal'  : config.get( 'console_normal')
+};
+
+function log( text){
+    function _getColor( _text){
+        if ( !colors ) return;
+        _text || ( _text = '');
+        let match = _text.match( /^\[\w+\]/);
+        if( !match ) return colors.normal;
+        else {
+            return colors[ match[0] || ''] || colors.normal;
+        }
+    }
+    text || ( text = '');
+    text = text.trim();
+    let line  = html.createText( consoleDiv, text, _getColor( text));
+    console.log( text[text.length-1] == '\n')
+    if ( line ) line.scrollIntoView();
 }
 
 function stopProcess(){
@@ -333,7 +327,7 @@ function stopProcess(){
 function openDB() {
     var selectedDevice = html.getSelectedSelect( 'deviceList');
     let simulator      = stateData.simulators[ selectedDevice];
-    tools.assert( simulator, 'Action disponible uniquement pour un simulateur');
+    tools.assert( simulator, 'Action disponible que pour un simulateur');
     let pathA      = '/Users/' + config.get( 'username') + '/Library/Developer/CoreSimulator/Devices/' + simulator.udid + '/data/Containers/Data/Application/';
     let dirContent = tools.file.readDir( pathA);
 
@@ -352,5 +346,26 @@ function openDB() {
     let goodPath = pathA + appDir + '/Library/Private Documents/';
     clipboard.writeText( goodPath + 'addition.sql');
     let path = [ goodPath];
-    var cmd = spawn( 'open', path);
+    let cmd = spawn( 'open', path);
 }
+
+/*function gitPull(){
+    html.empty( consoleDiv);
+    var selectedProject = html.getSelectedSelect( 'projectList');
+    let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
+    projectPath += '/';
+    alert( projectPath)
+    let cmd  = spawn('git', [ 'pull', projectPath]);
+    cmd.stdout.on('data', function (data) {
+        log( data.toString());
+    });
+
+    cmd.stderr.on('data', function (data) {
+        log( data.toString());
+    });
+
+    cmd.on('exit', function (code) {
+        if ( !code ) log( '**** FIN DU GIT PULL ****');
+    });
+    cmd.kill();
+}*/
