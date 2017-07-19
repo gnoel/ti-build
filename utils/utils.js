@@ -84,6 +84,8 @@ var config = {
         "warning",
         "error",
     ],
+    bools : ["true", "false"],
+    f5f6 : ["F5", "F6"],
     getConfigPath : function(){
         return CONFIG_PATH;
     },
@@ -213,6 +215,28 @@ var html = {
         select.appendChild( option);
 
         return option;
+    },
+
+    createCheckBox : function( container, id, label, value, onChange){
+        this._check( 'createCheckBox', container);
+
+        let div = document.createElement('div');
+
+        let lbl       = document.createElement( 'label');
+        lbl.for       = id    || '';
+        lbl.innerText = (label || '') + ' : ';
+
+        let input     = document.createElement( 'input');
+        input.type    = 'checkbox';
+        input.id      = id      || '';
+        input.value   = value   || '';
+        if ( onChange ) input.addEventListener( 'change', onChange);
+
+        div.appendChild( lbl);
+        div.appendChild( input);
+
+        container.appendChild( div);
+        return div;
     },
 
     getSelectedSelect : function( selectId){
