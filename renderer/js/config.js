@@ -27,19 +27,19 @@ const configDiv = document.getElementById( 'configDiv');
             var select  = html.createSelect( configDiv, id, id, save);
             for (var i = config.logLevel.length - 1; i >= 0; i--) {
                 var opt = config.logLevel[i];
-                html.addOptionToSelect(select, opt, opt, opt.toLowerCase() == value.toLowerCase() ? true : false);
+                html.addOptionToSelect(select, opt.value, opt.name, opt.value == value ? true : false);
             };
          }else if( id == "run_event_F5_or_F6"){
             var select  = html.createSelect( configDiv, id, id, save);
             for (var i = config.f5f6.length - 1; i >= 0; i--) {
                 var opt = config.f5f6[i];
-                html.addOptionToSelect(select, opt, opt, opt.toLowerCase() == value.toLowerCase() ? true : false);
+                html.addOptionToSelect(select, opt, opt, opt == value ? true : false);
             };
          }else if(id == "skip_js_minify" || id == "sim_focus"){
              var select  = html.createSelect( configDiv, id, id, save);
             for (var i = config.bools.length - 1; i >= 0; i--) {
                 var opt = config.bools[i];
-                html.addOptionToSelect(select, opt, opt, opt.toLowerCase() == value.toLowerCase() ? true : false);
+                html.addOptionToSelect(select, opt, opt, opt == value ? true : false);
             };
          }else{
             html.createTextInput( configDiv, id, id, value, save);

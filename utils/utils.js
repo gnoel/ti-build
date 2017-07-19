@@ -78,11 +78,11 @@ var tools = {
 
 var config = {
     logLevel : [
-        "trace",
-        "debug",
-        "info",
-        "warning",
-        "error",
+        {"name" : "Trace", "value" : "trace"},
+        {"name" : "Debug", "value" : "debug"},
+        {"name" : "Info", "value" : "info"},
+        {"name" : "Warning", "value" : "warn"},
+        {"name" : "Error", "value" : "error"},
     ],
     bools : ["true", "false"],
     f5f6 : ["F5", "F6"],
