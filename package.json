@@ -4,7 +4,11 @@
   "description": "App to run your Appcelerator projets",
   "main": "main/main.js",
   "scripts": {
-    "start": "electron ."
+    "postinstall": "electron-builder install-app-deps",
+    "start": "npm install && electron .",
+    "pack": "build --dir",
+    "dist": "build",
+    "dev": "electron . --enable-logging"
   },
   "repository": "",
   "keywords": [
@@ -12,9 +16,29 @@
   ],
   "author": "Nono",
   "license": "MIT",
+  "dependencies": {
+    "fix-path": "^2.1.0",
+    "underscore": "latest",
+    "xml2js": "latest"
+  },
   "devDependencies": {
-    "electron": "^1.4.1",
-    "xml2js" : "latest",
-    "underscore" : "latest"
+    "electron": "^1.6.11",
+    "electron-builder": "^19.16.1"
+  },
+  "build": {
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
   }
 }

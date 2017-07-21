@@ -27,7 +27,7 @@ function createMainWindow () {
         mainWindow.webContents.send('refreshF6');
     })
 
-  //mainWindow.webContents.openDevTools()
+//   mainWindow.webContents.openDevTools()
   mainWindow.on('closed', function () {
     mainWindow = null
   })
@@ -40,7 +40,7 @@ function createConfigWindow () {
         protocol : 'file:',
         slashes  : true
     }));
-  //configWindow.webContents.openDevTools()
+//   configWindow.webContents.openDevTools()
   configWindow.on('closed', function () {
     configWindow = null
   })

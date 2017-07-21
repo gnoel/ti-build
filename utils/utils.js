@@ -1,6 +1,10 @@
 const fs          = require('fs');
 const spawn       = require('child_process').spawn;
 const parseString = require('xml2js').parseString;
+
+// Use to access 'spawn' when the app is packaged
+const fixPath     = require('fix-path')();
+
 const remote      = require('electron').remote;
 const app         = remote.app;
 const CONFIG_PATH = (function(){
@@ -14,7 +18,6 @@ var tools = {
     },
     throwError : function( message){
         message || ( message = "Une erreur s'est produite");
-        alert( message);
         throw message
     },
     file : {
@@ -42,11 +45,14 @@ var tools = {
     },
     getTiInfos : function( callback){
         if ( !callback ) return;
-        let runCmd = spawn('ti', [ 'info', '-o', 'json']);
+
+        let runCmd = spawn( 'ti', [ 'info', '-o', 'json']);
+
         var allData = '';
         runCmd.stdout.on('data', function (data) {
             allData += data.toString();
         });
+        
         runCmd.on('exit', function( errorCode) {
             this.assert( !errorCode, 'tools.getTiInfos : Fail');
             var json = JSON.parse( allData);
