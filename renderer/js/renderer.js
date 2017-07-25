@@ -17,6 +17,7 @@ const runBtn          = document.getElementById( 'runBtn');
 const refreshBtn      = document.getElementById( 'refreshBtn');
 const stopBtn         = document.getElementById( 'stopBtn');
 const openDbBtn       = document.getElementById( 'openDbBtn');
+const clearConsoleBtn = document.getElementById( 'clearConsole');
 const gitPullBtn      = document.getElementById( 'gitPullBtn');
 const consoleDiv      = document.getElementById( 'console');
 
@@ -25,6 +26,7 @@ refreshBtn.addEventListener( 'click', refreshProjectList);
 runBtn.addEventListener( 'click', run);
 stopBtn.addEventListener( 'click', stopProcess);
 openDbBtn.addEventListener( 'click', openDB);
+clearConsoleBtn.addEventListener( 'click', clearConsole);
 //gitPullBtn.addEventListener( 'click', gitPull);
 
 // TODO : GROS REFACTO de ce truc bien crade
@@ -347,6 +349,10 @@ function openDB() {
     clipboard.writeText( goodPath + 'addition.sql');
     let path = [ goodPath];
     let cmd = spawn( 'open', path);
+}
+
+function clearConsole() {
+    html.empty( consoleDiv);
 }
 
 /*function gitPull(){
