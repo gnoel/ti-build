@@ -18,6 +18,7 @@ var tools = {
     },
     throwError : function( message){
         message || ( message = "Une erreur s'est produite");
+        alert( message);
         throw message
     },
     file : {
@@ -52,7 +53,7 @@ var tools = {
         runCmd.stdout.on('data', function (data) {
             allData += data.toString();
         });
-        
+
         runCmd.on('exit', function( errorCode) {
             this.assert( !errorCode, 'tools.getTiInfos : Fail');
             var json = JSON.parse( allData);
