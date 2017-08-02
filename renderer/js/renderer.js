@@ -8,6 +8,7 @@ const path      = require('path');
 const spawn     = require('child_process').spawn;
 const spawnSync = require('child_process').spawnSync;
 const _         = require('underscore');
+const os        = require('os');
 
 const projectsDiv     = document.getElementById( 'projectsDiv');
 const devicesDiv      = document.getElementById( 'devicesDiv');
@@ -20,6 +21,7 @@ const openDbBtn       = document.getElementById( 'openDbBtn');
 const clearConsoleBtn = document.getElementById( 'clearConsole');
 const gitPullBtn      = document.getElementById( 'gitPullBtn');
 const consoleDiv      = document.getElementById( 'console');
+const localIpAddressDiv  = document.getElementById('localIpAddress');
 
 configBtn.addEventListener( 'click', openConfig);
 refreshBtn.addEventListener( 'click', refreshProjectList);
@@ -27,6 +29,7 @@ runBtn.addEventListener( 'click', run);
 stopBtn.addEventListener( 'click', stopProcess);
 openDbBtn.addEventListener( 'click', openDB);
 clearConsoleBtn.addEventListener( 'click', clearConsole);
+displayLocalIpAddress();
 //gitPullBtn.addEventListener( 'click', gitPull);
 
 // TODO : GROS REFACTO de ce truc bien crade
@@ -353,6 +356,23 @@ function openDB() {
 
 function clearConsole() {
     html.empty( consoleDiv);
+}
+
+function displayLocalIpAddress() {
+
+    let interfaces = os.networkInterfaces();
+    let ipv4 = [];
+
+    _.each(interfaces, function (interfaceGroup) {
+        _.each(interfaceGroup, function (inter) {
+            console.log(inter);
+            if (inter.family === 'IPv4' && !inter.internal) {
+                ipv4.push(inter.address);
+            }
+        })
+    });
+
+    localIpAddressDiv.value = ipv4;
 }
 
 /*function gitPull(){

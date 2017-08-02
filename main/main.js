@@ -4,7 +4,7 @@ const { BrowserWindow, app, shell, dialog, globalShortcut, ipcMain, Menu } = req
 const path = require('path');
 const url  = require('url');
 
-const os     = require('os');
+const os   = require('os');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -27,7 +27,7 @@ function createMainWindow () {
         mainWindow.webContents.send('refreshF6');
     })
 
-    //   mainWindow.webContents.openDevTools()
+    // mainWindow.webContents.openDevTools()
     mainWindow.on('closed', function () {
         mainWindow = null
     })
@@ -61,7 +61,7 @@ function createConfigWindow () {
         protocol : 'file:',
         slashes  : true
     }));
-//   configWindow.webContents.openDevTools()
+  // configWindow.webContents.openDevTools()
   configWindow.on('closed', function () {
     configWindow = null
   })
