@@ -365,7 +365,6 @@ function displayLocalIpAddress() {
 
     _.each(interfaces, function (interfaceGroup) {
         _.each(interfaceGroup, function (inter) {
-            console.log(inter);
             if (inter.family === 'IPv4' && !inter.internal) {
                 ipv4.push(inter.address);
             }
