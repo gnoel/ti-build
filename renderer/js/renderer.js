@@ -9,6 +9,7 @@ const spawn     = require('child_process').spawn;
 const spawnSync = require('child_process').spawnSync;
 const _         = require('underscore');
 const notifier      = require('node-notifier');
+const player        = require('play-sound')(opts = {});
 
 const projectsDiv     = document.getElementById( 'projectsDiv');
 const devicesDiv      = document.getElementById( 'devicesDiv');
@@ -369,6 +370,9 @@ function notificationHandler(text){
       'message': "NONO N'EST PAS CONTENT",
       'contentImage' : path.join(__dirname, '../../assets/img/nono-bad.jpg')
     });
+    player.play(path.join(__dirname, '../../assets/sound/denis_brognard_ah.mp3'), function(err){
+       if (err) throw err
+     });
   }
 
   if( index2 != -1 && !successNotification){
