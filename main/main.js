@@ -1,10 +1,10 @@
-const { BrowserWindow, app, shell, dialog, globalShortcut, ipcMain } = require('electron');
+const { BrowserWindow, app, shell, dialog, globalShortcut, ipcMain, Menu } = require('electron');
 // Module to control application life.
 
 const path = require('path');
 const url  = require('url');
 
-const os     = require('os');
+const os   = require('os');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -27,10 +27,31 @@ function createMainWindow () {
         mainWindow.webContents.send('refreshF6');
     })
 
-//   mainWindow.webContents.openDevTools()
-  mainWindow.on('closed', function () {
-    mainWindow = null
-  })
+    // mainWindow.webContents.openDevTools()
+    mainWindow.on('closed', function () {
+        mainWindow = null
+    })
+
+    var template = [{
+        label: "Application",
+        submenu: [
+            { label: "About Application", selector: "orderFrontStandardAboutPanel:" },
+            { type: "separator" },
+            { label: "Quit", accelerator: "Command+Q", click: function() { app.quit(); }}
+        ]}, {
+        label: "Edit",
+        submenu: [
+            { label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:" },
+            { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:" },
+            { type: "separator" },
+            { label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:" },
+            { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
+            { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
+            { label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:" }
+        ]}
+    ];
+
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 function createConfigWindow () {
@@ -40,7 +61,7 @@ function createConfigWindow () {
         protocol : 'file:',
         slashes  : true
     }));
-//   configWindow.webContents.openDevTools()
+  // configWindow.webContents.openDevTools()
   configWindow.on('closed', function () {
     configWindow = null
   })
