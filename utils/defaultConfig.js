@@ -11,6 +11,7 @@ module.exports = {
     console_info            : '#c57bdb',
     console_warn            : '#d09a6a',
     console_error           : '#de6d77',
+    console_background      : '#282c34',
     default_min_ios_version : 7, // Ne pas changer
     run_shortcut            : 'F5',
     username                : '',

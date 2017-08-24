@@ -24,6 +24,8 @@ const clearConsoleBtn   = document.getElementById( 'clearConsole');
 const gitPullBtn        = document.getElementById( 'gitPullBtn');
 const consoleDiv        = document.getElementById( 'console');
 const localIpAddressBtn = document.getElementById('localIpAddress');
+const logger            = document.getElementById('logger');
+if ( logger ) logger.setAttribute( 'style', 'background-color : ' + config.get( 'console_background'));
 
 configBtn.addEventListener( 'click', openConfig);
 refreshBtn.addEventListener( 'click', refreshProjectList);
