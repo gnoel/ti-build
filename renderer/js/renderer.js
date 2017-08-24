@@ -8,6 +8,8 @@ const path      = require('path');
 const spawn     = require('child_process').spawn;
 const spawnSync = require('child_process').spawnSync;
 const _         = require('underscore');
+const notifier      = require('node-notifier');
+const player        = require('play-sound')(opts = {});
 const os        = require('os');
 
 const projectsDiv     = document.getElementById( 'projectsDiv');
@@ -32,6 +34,8 @@ clearConsoleBtn.addEventListener( 'click', clearConsole);
 displayLocalIpAddress();
 //gitPullBtn.addEventListener( 'click', gitPull);
 
+var errorNotification = false;
+var successNotification = false;
 // TODO : GROS REFACTO de ce truc bien crade
 ipc.on('refreshF5', function(){
     if ( config.get( 'run_event_F5_or_F6') == 'F5' ) {
@@ -240,6 +244,8 @@ function run(){
     var selectedDevice  = html.getSelectedSelect( 'deviceList');
     let simulator       = stateData.simulators[ selectedDevice];
     let device          = stateData.devices[ selectedDevice];
+    errorNotification = false;
+    successNotification = false;
 
     tools.assert( simulator || device, "Aucun simulateur / device ne correspond à celui sélectionné");
     let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
@@ -323,6 +329,10 @@ function log( text){
     let line  = html.createText( consoleDiv, text, _getColor( text));
     console.log( text[text.length-1] == '\n')
     if ( line ) line.scrollIntoView();
+
+    notificationHandler(text);
+
+
 }
 
 function stopProcess(){
@@ -353,6 +363,31 @@ function openDB() {
     let path = [ goodPath];
     let cmd = spawn( 'open', path);
 }
+
+function notificationHandler(text){
+  var index = text.indexOf('[ERROR]');
+  var index2 = text.indexOf('Finished building the application');
+
+  if( index != -1 && !errorNotification){
+    errorNotification = true;
+    notifier.notify({
+      'title': 'ERREUR',
+      'message': "NONO N'EST PAS CONTENT",
+      'contentImage' : path.join(__dirname, '../../assets/img/nono-bad.jpg')
+    });
+    player.play(path.join(__dirname, '../../assets/sound/denis_brognard_ah.mp3'), function(err){
+       if (err) throw err
+     });
+  }
+
+  if( index2 != -1 && !successNotification){
+    successNotification = true;
+    notifier.notify({
+      'title': 'Compilation terminée',
+      'message': 'OH OUI MA GUEULE',
+       'contentImage' : path.join(__dirname, '../../assets/img/nono-cool.jpg')
+    });
+  }
 
 function clearConsole() {
     html.empty( consoleDiv);
