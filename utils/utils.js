@@ -84,15 +84,43 @@ var tools = {
 };
 
 var config = {
-    logLevel : [
-        {"name" : "Trace", "value" : "trace"},
-        {"name" : "Debug", "value" : "debug"},
-        {"name" : "Info", "value" : "info"},
-        {"name" : "Warning", "value" : "warn"},
-        {"name" : "Error", "value" : "error"},
-    ],
-    bools : ["true", "false"],
-    f5f6 : ["F5", "F6"],
+    params  : {
+        log_level : [
+            { name : "Trace",   value : "trace" },
+            { name : "Debug",   value : "debug" },
+            { name : "Info",    value : "info" },
+            { name : "Warning", value : "warn" },
+            { name : "Error",   value : "error" },
+        ],
+        skip_js_minify : [
+            { name : "true",  value : "true" },
+            { name : "false", value : "false" }
+        ],
+        sim_focus : [
+            { name : "true",  value : "true" },
+            { name : "false", value : "false" }
+        ],
+        run_shortcut : [
+            { name : "F5", value : "F5" },
+            { name : "F6", value : "F6" }
+        ],
+        notif_success : [
+            { name : "true",  value : 1 },
+            { name : "false", value : 0 }
+        ],
+        notif_error : [
+            { name : "true",  value : 1 },
+            { name : "false", value : 0 }
+        ],
+        notif_error_sound : [
+            { name : "true",  value : 1 },
+            { name : "false", value : 0 }
+        ],
+        open_db_action : [
+            { name : "Open",      value : 'open' },
+            { name : "Clipboard", value : 'clipboard' }
+        ]
+    },
     getConfigPath : function(){
         return CONFIG_PATH;
     },
@@ -104,7 +132,7 @@ var config = {
     },
     get : function( name){
         if ( !name ) return '';
-        let conf = this.readConfigFile();
+        var conf = this.readConfigFile();
         return conf[ name] || '';
     },
     readConfigFile : function(){
@@ -125,8 +153,13 @@ var config = {
     _buildConfigFile : function(){
         let configFile    = this._readConfigFile();
         let defaultConfig = this._readDefaultConfigFile();
+        //Ajout de ceux qui spnt dans defaultConfig mais pas dans ConfigFile
         for ( props in defaultConfig ){
             if ( !configFile.hasOwnProperty( props) ) configFile[ props] = defaultConfig[ props];
+        }
+        // Suppression de tous ceux qui ne sont pas dans defaultConfig
+        for ( props in configFile ){
+            if ( !defaultConfig.hasOwnProperty( props) ) delete configFile[ props];
         }
         this.writeConfigFile( configFile);
     }

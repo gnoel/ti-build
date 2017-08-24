@@ -12,6 +12,11 @@ module.exports = {
     console_warn            : '#d09a6a',
     console_error           : '#de6d77',
     default_min_ios_version : 7, // Ne pas changer
-    run_event_F5_or_F6      : 'F5',
+    run_shortcut            : 'F5',
     username                : '',
+    notif_success           : 1,
+    notif_error             : 1,
+    notif_error_sound       : 1,
+    db_filename             : 'addition.sql',
+    open_db_action          : 'open'
 }

@@ -21,28 +21,18 @@ const configDiv = document.getElementById( 'configDiv');
     let ids = _.keys( conf);
     _.each( conf, function( value, id){
         ids.push( id);
-        if( id.indexOf('console_') !== -1 ){
+        if ( id.indexOf('console_') !== -1 ) {
             html.createColorInput( configDiv, id, id, value, save);
-         }else if( id == "log_level"){
-            var select  = html.createSelect( configDiv, id, id, save);
-            for (var i = config.logLevel.length - 1; i >= 0; i--) {
-                var opt = config.logLevel[i];
-                html.addOptionToSelect(select, opt.value, opt.name, opt.value == value ? true : false);
-            };
-         }else if( id == "run_event_F5_or_F6"){
-            var select  = html.createSelect( configDiv, id, id, save);
-            for (var i = config.f5f6.length - 1; i >= 0; i--) {
-                var opt = config.f5f6[i];
-                html.addOptionToSelect(select, opt, opt, opt == value ? true : false);
-            };
-         }else if(id == "skip_js_minify" || id == "sim_focus"){
-             var select  = html.createSelect( configDiv, id, id, save);
-            for (var i = config.bools.length - 1; i >= 0; i--) {
-                var opt = config.bools[i];
-                html.addOptionToSelect(select, opt, opt, opt == value ? true : false);
-            };
-         }else{
-            html.createTextInput( configDiv, id, id, value, save);
-         }
+        } else {
+            var params = config.params[ id];
+            if ( params ) {
+                const select = html.createSelect( configDiv, id, id, save);
+                params.forEach( function( param){
+                    html.addOptionToSelect(select, param.value, param.name, param.value == value);
+                });
+            } else {
+                html.createTextInput( configDiv, id, id, value, save);
+            }
+        }
     });
 }());

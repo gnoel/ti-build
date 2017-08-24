@@ -8,22 +8,22 @@ const path      = require('path');
 const spawn     = require('child_process').spawn;
 const spawnSync = require('child_process').spawnSync;
 const _         = require('underscore');
-const notifier      = require('node-notifier');
-const player        = require('play-sound')(opts = {});
+const notifier  = require('node-notifier');
+const player    = require('play-sound')(opts = {});
 const os        = require('os');
 
-const projectsDiv     = document.getElementById( 'projectsDiv');
-const devicesDiv      = document.getElementById( 'devicesDiv');
-const provisioningDiv = document.getElementById( 'provisioningDiv');
-const configBtn       = document.getElementById( 'configBtn');
-const runBtn          = document.getElementById( 'runBtn');
-const refreshBtn      = document.getElementById( 'refreshBtn');
-const stopBtn         = document.getElementById( 'stopBtn');
-const openDbBtn       = document.getElementById( 'openDbBtn');
-const clearConsoleBtn = document.getElementById( 'clearConsole');
-const gitPullBtn      = document.getElementById( 'gitPullBtn');
-const consoleDiv      = document.getElementById( 'console');
-const localIpAddressDiv  = document.getElementById('localIpAddress');
+const projectsDiv       = document.getElementById( 'projectsDiv');
+const devicesDiv        = document.getElementById( 'devicesDiv');
+const provisioningDiv   = document.getElementById( 'provisioningDiv');
+const configBtn         = document.getElementById( 'configBtn');
+const runBtn            = document.getElementById( 'runBtn');
+const refreshBtn        = document.getElementById( 'refreshBtn');
+const stopBtn           = document.getElementById( 'stopBtn');
+const openDbBtn         = document.getElementById( 'openDbBtn');
+const clearConsoleBtn   = document.getElementById( 'clearConsole');
+const gitPullBtn        = document.getElementById( 'gitPullBtn');
+const consoleDiv        = document.getElementById( 'console');
+const localIpAddressBtn = document.getElementById('localIpAddress');
 
 configBtn.addEventListener( 'click', openConfig);
 refreshBtn.addEventListener( 'click', refreshProjectList);
@@ -31,19 +31,20 @@ runBtn.addEventListener( 'click', run);
 stopBtn.addEventListener( 'click', stopProcess);
 openDbBtn.addEventListener( 'click', openDB);
 clearConsoleBtn.addEventListener( 'click', clearConsole);
+localIpAddressBtn.addEventListener( 'click', displayLocalIpAddress);
 displayLocalIpAddress();
 //gitPullBtn.addEventListener( 'click', gitPull);
 
-var errorNotification = false;
-var successNotification = false;
+let _errorNotification = false;
+
 // TODO : GROS REFACTO de ce truc bien crade
 ipc.on('refreshF5', function(){
-    if ( config.get( 'run_event_F5_or_F6') == 'F5' ) {
+    if ( config.get( 'run_shortcut') == 'F5' ) {
         run();
     }
 });
 ipc.on('refreshF6', function(){
-    if ( config.get( 'run_event_F5_or_F6') == 'F6' ) {
+    if ( config.get( 'run_shortcut') == 'F6' ) {
         run();
     }
 });
@@ -244,8 +245,7 @@ function run(){
     var selectedDevice  = html.getSelectedSelect( 'deviceList');
     let simulator       = stateData.simulators[ selectedDevice];
     let device          = stateData.devices[ selectedDevice];
-    errorNotification = false;
-    successNotification = false;
+    _errorNotification  = false;
 
     tools.assert( simulator || device, "Aucun simulateur / device ne correspond à celui sélectionné");
     let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
@@ -327,12 +327,9 @@ function log( text){
     text || ( text = '');
     text = text.trim();
     let line  = html.createText( consoleDiv, text, _getColor( text));
-    console.log( text[text.length-1] == '\n')
     if ( line ) line.scrollIntoView();
 
-    notificationHandler(text);
-
-
+    notificationHandler( text);
 }
 
 function stopProcess(){
@@ -359,42 +356,47 @@ function openDB() {
     let appDir = dirs[0];
     tools.assert( appDir, 'Aucune application installée sur ce simulateur');
     let goodPath = pathA + appDir + '/Library/Private Documents/';
-    clipboard.writeText( goodPath + 'addition.sql');
-    let path = [ goodPath];
-    let cmd = spawn( 'open', path);
+    const action = config.get( 'open_db_action');
+    if ( action == 'clipboard' ) clipboard.writeText( goodPath + ( config.get( 'db_filename') || ''));
+    else {
+        let path = [ goodPath];
+        let cmd = spawn( 'open', path);
+    }
 }
 
-function notificationHandler(text){
-  var index = text.indexOf('[ERROR]');
-  var index2 = text.indexOf('Finished building the application');
+function notificationHandler( text){
+    const isError   = text.indexOf('[ERROR]') > -1;
+    const isSuccess = text.indexOf('Finished building the application') > -1;
 
-  if( index != -1 && !errorNotification){
-    errorNotification = true;
-    notifier.notify({
-      'title': 'ERREUR',
-      'message': "NONO N'EST PAS CONTENT",
-      'contentImage' : path.join(__dirname, '../../assets/img/nono-bad.jpg')
-    });
-    player.play(path.join(__dirname, '../../assets/sound/denis_brognard_ah.mp3'), function(err){
-       if (err) throw err
-     });
-  }
+    if ( isError && !_errorNotification && config.get( 'notif_error') ) {
+        _errorNotification = true;
+        notifier.notify({
+            title        : 'ERREUR',
+            message      : "Une erreur s'est produite",
+            contentImage : path.join(__dirname, '../../assets/img/nono-bad.jpg')
+        });
+        if ( config.get( 'notif_error_sound') ) {
+            player.play(path.join(__dirname, '../../assets/sound/denis_brognard_ah.mp3'), function(err){
+                tools.assert( !err, 'Erreur lors de la lecture du son de notification');
+            });
+        }
+    }
 
-  if( index2 != -1 && !successNotification){
-    successNotification = true;
-    notifier.notify({
-      'title': 'Compilation terminée',
-      'message': 'OH OUI MA GUEULE',
-       'contentImage' : path.join(__dirname, '../../assets/img/nono-cool.jpg')
-    });
-  }
+    if ( isSuccess && config.get( 'notif_success') ) {
+        notifier.notify({
+            title        : 'SUCCES',
+            message      : 'Compilation terminée avec succès',
+            contentImage : path.join(__dirname, '../../assets/img/nono-cool.jpg')
+        });
+    }
+}
 
 function clearConsole() {
     html.empty( consoleDiv);
 }
 
 function displayLocalIpAddress() {
-
+    if ( !localIpAddressBtn ) return;
     let interfaces = os.networkInterfaces();
     let ipv4 = [];
 
@@ -403,10 +405,10 @@ function displayLocalIpAddress() {
             if (inter.family === 'IPv4' && !inter.internal) {
                 ipv4.push(inter.address);
             }
-        })
+        });
     });
 
-    localIpAddressDiv.value = ipv4;
+    localIpAddressBtn.value = ipv4.length ? ipv4.join( ' - ') : "Pas d'adresse IP";
 }
 
 /*function gitPull(){
