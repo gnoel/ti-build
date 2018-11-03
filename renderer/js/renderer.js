@@ -8,8 +8,6 @@ const path      = require('path');
 const spawn     = require('child_process').spawn;
 const spawnSync = require('child_process').spawnSync;
 const _         = require('underscore');
-const notifier  = require('node-notifier');
-const player    = require('play-sound')(opts = {});
 const os        = require('os');
 
 const projectsDiv       = document.getElementById( 'projectsDiv');
@@ -17,11 +15,12 @@ const devicesDiv        = document.getElementById( 'devicesDiv');
 const provisioningDiv   = document.getElementById( 'provisioningDiv');
 const configBtn         = document.getElementById( 'configBtn');
 const runBtn            = document.getElementById( 'runBtn');
+const debugBtn          = document.getElementById( 'debugBtn');
 const refreshBtn        = document.getElementById( 'refreshBtn');
 const stopBtn           = document.getElementById( 'stopBtn');
 const openDbBtn         = document.getElementById( 'openDbBtn');
 const clearConsoleBtn   = document.getElementById( 'clearConsole');
-const gitPullBtn        = document.getElementById( 'gitPullBtn');
+const devToolsBtn       = document.getElementById( 'devToolsBtn');
 const consoleDiv        = document.getElementById( 'console');
 const localIpAddressBtn = document.getElementById('localIpAddress');
 const logger            = document.getElementById('logger');
@@ -30,25 +29,28 @@ if ( logger ) logger.setAttribute( 'style', 'background-color : ' + config.get( 
 configBtn.addEventListener( 'click', openConfig);
 refreshBtn.addEventListener( 'click', refreshProjectList);
 runBtn.addEventListener( 'click', run);
+debugBtn.addEventListener( 'click', debug);
 stopBtn.addEventListener( 'click', stopProcess);
 openDbBtn.addEventListener( 'click', openDB);
 clearConsoleBtn.addEventListener( 'click', clearConsole);
 localIpAddressBtn.addEventListener( 'click', displayLocalIpAddress);
 displayLocalIpAddress();
-//gitPullBtn.addEventListener( 'click', gitPull);
+devToolsBtn.addEventListener( 'click', openDevTools);
 
-let _errorNotification = false;
+//sudo osascript LaunchSafariDebuggerForIosSimulator.scpt
+//'/Users/geoffreynoel/Downloads/LaunchSafariDebuggerForIosSimulator.scpt'
+var debugCmd = null;
+function debug(){
+    if ( debugCmd ) debugCmd.kill();
+    var scriptPath = config.get( 'debug_script_path');
 
-// TODO : GROS REFACTO de ce truc bien crade
+    if ( scriptPath ) {
+        debugCmd = spawn( 'osascript', [scriptPath]);
+    }
+}
+
 ipc.on('refreshF5', function(){
-    if ( config.get( 'run_shortcut') == 'F5' ) {
-        run();
-    }
-});
-ipc.on('refreshF6', function(){
-    if ( config.get( 'run_shortcut') == 'F6' ) {
-        run();
-    }
+    run();
 });
 
 let stateData = {
@@ -77,17 +79,20 @@ function refreshProjectList(){
     tools.assert( dirs && dirs.length, 'Workspace vide : ' + workspacePath);
 
     html.empty( projectsDiv);
-    let select = html.createSelect( projectsDiv, 'projectList', 'Projet' , refreshSimulatorsAndDevices);
+    let select = html.createSelect( projectsDiv, 'projectList', 'Projet' , () => {
+        const selectValue = html.getSelectedSelect( 'projectList');
+        config.set( 'last_project', selectValue);
+    });
     if ( !dirs || !dirs.length ) {
         html.addOptionToSelect( select, null, '*** Aucun projet ***', true);
     } else {
-        _.each( dirs, function( dir, index){
+        var lastProject = config.get( 'last_project');
+        _.each( dirs, function( dir){
             var dirPath    = workspacePath + '/' + dir
             let gitBranch  = spawnSync('git', [ '-C', dirPath, 'rev-parse', '--abbrev-ref', 'HEAD']);
             let branchName = (gitBranch && gitBranch.stdout ? gitBranch.stdout.toString() : '').trim();
             let label      = branchName ? ( dir + ' [' + branchName + ']') : dir;
-            let id         = '_projectRadio_' + index + '_';
-            html.addOptionToSelect( select, dir, label, index === 0);
+            html.addOptionToSelect( select, dir, label, lastProject === dir);
         });
     }
     refreshSimulatorsAndDevices();
@@ -112,23 +117,30 @@ function refreshSimulatorsAndDevices(){
         _minIosVersion || ( _minIosVersion = config.get( 'default_min_ios_version'));
         _targetList    || ( targetList = {});
         let simulators = {};
+        let temp = [];
+        let lastVersion = 0;
         _.each( _tiInfos.ios.simulators.ios, function( simList, simVersion){
             if ( simVersion < _minIosVersion ) return;
             _.each( simList, function( sim) {
                 var family = (sim.family || '').toLowerCase();
                 if ( !_targetList[ family] ) return;
-                simulators[ sim.udid] = {
-                    simulator  : true,
-                    type       : sim.type,
-                    deviceDir  : sim.deviceDir,
-                    deviceName : sim.deviceName,
-                    name       : sim.name,
-                    udid       : sim.udid,
-                    version    : sim.version,
-                    family     : family
-                };
+                sim.family = family;
+                temp.push( sim);
             });
         });
+        temp = _.sortBy( temp, 'name');
+        _.each( temp, ( sim) => {
+            simulators[ sim.udid] = {
+                simulator  : true,
+                type       : sim.type,
+                deviceDir  : sim.deviceDir,
+                deviceName : sim.deviceName,
+                name       : sim.name,
+                udid       : sim.udid,
+                version    : sim.version,
+                family     : sim.family
+            };
+        })
         stateData.simulators = simulators;
         return simulators;
     }
@@ -162,7 +174,7 @@ function refreshSimulatorsAndDevices(){
         html.addOptionToSelect( select, null, '*** ' + title + ' ***', false);
         let first = true;
         _.each( list, function( device, udid){
-            html.addOptionToSelect( select, udid, device.name, ( autoSelect && first));
+            html.addOptionToSelect( select, udid, device.name + ' (' + device.version + ')', ( autoSelect && first));
             first = false;
         });
     }
@@ -233,6 +245,7 @@ function refreshSimulatorsAndDevices(){
         html.empty( container)
         html.createText( container, 'Chargement en cours...');
     }
+
     loadingMessage( devicesDiv);
     loadingMessage( provisioningDiv);
     loadingMessage( certificateDiv);
@@ -242,12 +255,12 @@ function refreshSimulatorsAndDevices(){
 let runCmd = null;
 function run(){
     stopProcess();
+    displayLocalIpAddress();
 
     var selectedProject = html.getSelectedSelect( 'projectList');
     var selectedDevice  = html.getSelectedSelect( 'deviceList');
     let simulator       = stateData.simulators[ selectedDevice];
     let device          = stateData.devices[ selectedDevice];
-    _errorNotification  = false;
 
     tools.assert( simulator || device, "Aucun simulateur / device ne correspond à celui sélectionné");
     let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
@@ -264,6 +277,8 @@ function run(){
     params.push( projectPath);
     params.push( '--log-level');
     params.push( config.get( 'log_level'));
+    params.push( '--ios-version');
+    params.push( config.get( 'ios_version'));
 
     if ( device ) {
         params.push( '-p');
@@ -330,8 +345,6 @@ function log( text){
     text = text.trim();
     let line  = html.createText( consoleDiv, text, _getColor( text));
     if ( line ) line.scrollIntoView();
-
-    notificationHandler( text);
 }
 
 function stopProcess(){
@@ -342,7 +355,7 @@ function openDB() {
     var selectedDevice = html.getSelectedSelect( 'deviceList');
     let simulator      = stateData.simulators[ selectedDevice];
     tools.assert( simulator, 'Action disponible que pour un simulateur');
-    let pathA      = '/Users/' + config.get( 'username') + '/Library/Developer/CoreSimulator/Devices/' + simulator.udid + '/data/Containers/Data/Application/';
+    let pathA      = simulator.deviceDir+'/data/Containers/Data/Application/';
     let dirContent = tools.file.readDir( pathA);
 
     let dirs       = dirContent.filter( function( name){
@@ -366,33 +379,6 @@ function openDB() {
     }
 }
 
-function notificationHandler( text){
-    const isError   = text.indexOf('[ERROR]') > -1;
-    const isSuccess = text.indexOf('Finished building the application') > -1;
-
-    if ( isError && !_errorNotification && config.get( 'notif_error') ) {
-        _errorNotification = true;
-        notifier.notify({
-            title        : 'ERREUR',
-            message      : "Une erreur s'est produite",
-            contentImage : path.join(__dirname, '../../assets/img/nono-bad.jpg')
-        });
-        if ( config.get( 'notif_error_sound') ) {
-            player.play(path.join(__dirname, '../../assets/sound/denis_brognard_ah.mp3'), function(err){
-                tools.assert( !err, 'Erreur lors de la lecture du son de notification');
-            });
-        }
-    }
-
-    if ( isSuccess && config.get( 'notif_success') ) {
-        notifier.notify({
-            title        : 'SUCCES',
-            message      : 'Compilation terminée avec succès',
-            contentImage : path.join(__dirname, '../../assets/img/nono-cool.jpg')
-        });
-    }
-}
-
 function clearConsole() {
     html.empty( consoleDiv);
 }
@@ -413,23 +399,6 @@ function displayLocalIpAddress() {
     localIpAddressBtn.value = ipv4.length ? ipv4.join( ' - ') : "Pas d'adresse IP";
 }
 
-/*function gitPull(){
-    html.empty( consoleDiv);
-    var selectedProject = html.getSelectedSelect( 'projectList');
-    let projectPath = path.resolve( config.get( 'workspace'), selectedProject);
-    projectPath += '/';
-    alert( projectPath)
-    let cmd  = spawn('git', [ 'pull', projectPath]);
-    cmd.stdout.on('data', function (data) {
-        log( data.toString());
-    });
-
-    cmd.stderr.on('data', function (data) {
-        log( data.toString());
-    });
-
-    cmd.on('exit', function (code) {
-        if ( !code ) log( '**** FIN DU GIT PULL ****');
-    });
-    cmd.kill();
-}*/
+function openDevTools() {
+    ipc.send('ipc-openDevTools')
+}

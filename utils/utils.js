@@ -3,7 +3,8 @@ const spawn       = require('child_process').spawn;
 const parseString = require('xml2js').parseString;
 
 // Use to access 'spawn' when the app is packaged
-const fixPath     = require('fix-path')();
+ const fixPath     = require('fix-path')();
+// console.log( process)
 
 const remote      = require('electron').remote;
 const app         = remote.app;
@@ -99,10 +100,6 @@ var config = {
         sim_focus : [
             { name : "true",  value : "true" },
             { name : "false", value : "false" }
-        ],
-        run_shortcut : [
-            { name : "F5", value : "F5" },
-            { name : "F6", value : "F6" }
         ],
         notif_success : [
             { name : "true",  value : 1 },

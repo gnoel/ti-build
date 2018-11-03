@@ -23,11 +23,6 @@ function createMainWindow () {
         mainWindow.webContents.send('refreshF5');
     })
 
-    globalShortcut.register('F6', () => {
-        mainWindow.webContents.send('refreshF6');
-    })
-
-    // mainWindow.webContents.openDevTools()
     mainWindow.on('closed', function () {
         mainWindow = null
     })
@@ -84,4 +79,8 @@ app.on('activate', function () {
 
 ipcMain.on('ipc-openConfig', (event) => {
     createConfigWindow();
+})
+
+ipcMain.on('ipc-openDevTools', (event) => {
+    mainWindow.webContents.openDevTools()
 })
