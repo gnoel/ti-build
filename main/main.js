@@ -1,4 +1,4 @@
-const { BrowserWindow, app, shell, dialog, globalShortcut, ipcMain, Menu } = require('electron');
+const { BrowserWindow, app, globalShortcut, Menu } = require('electron');
 // Module to control application life.
 
 const path = require('path');
@@ -43,7 +43,13 @@ function createMainWindow () {
             { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
             { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
             { label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:" }
-        ]}
+        ]},{
+            label : "Actions",
+            submenu : [
+                { label : "Configuration", click () { createConfigWindow() }},
+                { label : "Dev Tools", click () { mainWindow.webContents.openDevTools() }}
+            ]
+        }
     ];
 
     Menu.setApplicationMenu(Menu.buildFromTemplate(template));
@@ -76,11 +82,3 @@ app.on('activate', function () {
         createMainWindow()
     }
 });
-
-ipcMain.on('ipc-openConfig', (event) => {
-    createConfigWindow();
-})
-
-ipcMain.on('ipc-openDevTools', (event) => {
-    mainWindow.webContents.openDevTools()
-})

@@ -26,7 +26,6 @@ const localIpAddressBtn = document.getElementById('localIpAddress');
 const logger            = document.getElementById('logger');
 if ( logger ) logger.setAttribute( 'style', 'background-color : ' + config.get( 'console_background'));
 
-configBtn.addEventListener( 'click', openConfig);
 refreshBtn.addEventListener( 'click', refreshProjectList);
 runBtn.addEventListener( 'click', run);
 debugBtn.addEventListener( 'click', debug);
@@ -35,7 +34,6 @@ openDbBtn.addEventListener( 'click', openDB);
 clearConsoleBtn.addEventListener( 'click', clearConsole);
 localIpAddressBtn.addEventListener( 'click', displayLocalIpAddress);
 displayLocalIpAddress();
-devToolsBtn.addEventListener( 'click', openDevTools);
 
 //sudo osascript LaunchSafariDebuggerForIosSimulator.scpt
 //'/Users/geoffreynoel/Downloads/LaunchSafariDebuggerForIosSimulator.scpt'
@@ -61,10 +59,6 @@ let stateData = {
 (function(){
     refreshProjectList();
 }());
-
-function openConfig(){
-    ipc.send('ipc-openConfig')
-}
 
 function refreshProjectList(){
     let workspacePath = config.get( 'workspace');
@@ -397,8 +391,4 @@ function displayLocalIpAddress() {
     });
 
     localIpAddressBtn.value = ipv4.length ? ipv4.join( ' - ') : "Pas d'adresse IP";
-}
-
-function openDevTools() {
-    ipc.send('ipc-openDevTools')
 }
