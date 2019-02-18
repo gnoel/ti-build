@@ -262,7 +262,7 @@ function run(){
     let provisionningProfile = html.getSelectedSelect( 'provisioningList') || config.get( 'provisioning_profile');
     let certificate          = html.getSelectedSelect( 'certificateList')  || config.get( 'certificate');
 
-    let cmd    = 'ti';
+    let cmd    = config.get( 'ti_path') || 'ti';
     let params = [];
     params.push( 'build');
     params.push( '-D');

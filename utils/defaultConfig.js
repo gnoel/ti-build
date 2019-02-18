@@ -17,5 +17,6 @@ module.exports = {
     open_db_action          : 'open',
     ios_version             : '',
     debug_script_path       : '',
-    last_project            : ''
+    last_project            : '',
+    ti_path                 : ''
 }

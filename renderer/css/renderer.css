@@ -3,6 +3,11 @@ body {
     padding : 0px;
 }
 
+#topDiv {
+    height : 80px;
+    overflow-y: scroll;
+}
+
 #logger {
     background-color : #282c34;
     width  : 100%;

@@ -231,6 +231,7 @@ var html = {
 
         let select = document.createElement('select');
         select.id  = id || '';
+        select.style = 'max-width:300px'
         if ( onChange ) select.addEventListener( 'change', onChange);
 
         div.appendChild( lbl);
